@@ -4,11 +4,6 @@ let ioInstance = null;
 
 export const init = () => {
   ioInstance = socketIo();
-  ioInstance.on('connection', (socket) => {
-    socket.on('join', (room) => {
-      socket.join(room);
-    });
-  });
   return ioInstance;
 };
 
