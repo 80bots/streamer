@@ -53,7 +53,7 @@ class SendScreenshots {
 
   run() {
     try {
-      const screenshots = fs.readdirSync('.screenshots');
+      const screenshots = fs.readdirSync(config.app.screenshotsFolder);
       let dates = {};
       let folders = {};
       const currentDate = dayjs();
