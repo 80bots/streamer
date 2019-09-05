@@ -1,4 +1,3 @@
-import { IO } from '../services/socket.io';
 import config from '../config';
 import fs from 'fs';
 import dayjs from 'dayjs';
@@ -7,35 +6,39 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 
 const EVENTS = {
-  GET: 'get'
+  FOLDERS: 'get_folders',
+  SCREENSHOTS: 'get_screenshots'
+};
+
+const MESSAGES = {
+  FOLDERS: 'folders',
+  SCREENSHOTS: 'screenshots'
 };
 
 class SendScreenshots {
   listeners = ({
-    [EVENTS.GET]: (query) => this._sendScreenshotsFromFolder(query)
+    [EVENTS.SCREENSHOTS]: (query) => this._sendScreenshotsFromFolder(query),
+    [EVENTS.FOLDERS]: (query) => this._getFolders(query),
   });
 
-  constructor() {
-    this.socket = IO();
-    const handler = socket => {
-      for (let event in this.listeners) {
-        // eslint-disable-next-line no-prototype-builtins
-        if(this.listeners.hasOwnProperty(event)) {
-          socket.on(event, this.listeners[event]);
-        }
+  constructor(socket) {
+    this.socket = socket;
+    for (let event in this.listeners) {
+      // eslint-disable-next-line no-prototype-builtins
+      if(this.listeners.hasOwnProperty(event)) {
+        socket.on(event, this.listeners[event]);
       }
-    };
-    this.socket.on('connection', handler);
-    this.socket.on('reconnect', handler);
+    }
+    this._getFolders();
   }
 
-  _sendScreenshotsFromFolder({ date }) {
+  _sendScreenshotsFromFolder({ date, limit, offset }) {
     if(date) {
       if(this.dates[date]) {
-        let screenshots = this.dates[date].slice(0, 20).map(item => ({
+        let screenshots = this.dates[date].slice(offset).slice(0, limit).map(item => ({
           name: item, data: fs.readFileSync(config.app.screenshotsFolder + item)
         }));
-        this.socket.emit('data', screenshots);
+        this.socket.emit(MESSAGES.SCREENSHOTS, screenshots);
       }
     }
   }
@@ -51,7 +54,7 @@ class SendScreenshots {
     return result;
   }
 
-  run() {
+  _getFolders() {
     try {
       const screenshots = fs.readdirSync(config.app.screenshotsFolder);
       let dates = {};
@@ -63,7 +66,7 @@ class SendScreenshots {
           const diff = currentDate.diff(date, 'day');
           folders[date] = {
             thumbnail: fs.readFileSync(config.app.screenshotsFolder + item),
-            name: diff > 0 ? `${diff} days ago` : 'Today',
+            name: diff > 0 ? diff === 1 ? 'Yesterday' : `${diff} days ago` : 'Today',
             date,
             total: 1
           };
@@ -75,9 +78,9 @@ class SendScreenshots {
       });
       folders = this._transformToArray(folders);
       this.dates = dates;
-      this.socket.emit('init', folders);
+      this.socket.emit(MESSAGES.FOLDERS, folders);
     } catch (e) {
-      this.socket.emit('init', []);
+      this.socket.emit(MESSAGES.FOLDERS, []);
     }
   }
 }
