@@ -1,6 +1,7 @@
 import config from '../config';
 import fs from 'fs';
 import dayjs from 'dayjs';
+import chockidar from 'chokidar';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
@@ -12,7 +13,8 @@ const EVENTS = {
 
 const MESSAGES = {
   FOLDERS: 'folders',
-  SCREENSHOTS: 'screenshots'
+  SCREENSHOTS: 'screenshots',
+  SCREENSHOT: 'screenshot'
 };
 
 class SendScreenshots {
@@ -23,6 +25,9 @@ class SendScreenshots {
 
   constructor(socket) {
     this.socket = socket;
+    this.watcher = chockidar.watch(config.app.screenshotsFolder, { persistent: true, ignoreInitial: true });
+    this.watcher.on('add', this._onScreenShotAdded);
+
     for (let event in this.listeners) {
       // eslint-disable-next-line no-prototype-builtins
       if(this.listeners.hasOwnProperty(event)) {
@@ -31,6 +36,11 @@ class SendScreenshots {
     }
     this._getFolders();
   }
+
+  _onScreenShotAdded = (path) => {
+    const name = path.split('/')[path.split('/').length - 1];
+    this.socket.emit(MESSAGES.SCREENSHOT, { name, data: fs.readFileSync(path) });
+  };
 
   _sendScreenshotsFromFolder({ date, limit, offset }) {
     if(date) {
@@ -56,7 +66,7 @@ class SendScreenshots {
 
   _getFolders() {
     try {
-      const screenshots = fs.readdirSync(config.app.screenshotsFolder);
+      const screenshots = fs.readdirSync(config.app.screenshotsFolder).reverse();
       let dates = {};
       let folders = {};
       const currentDate = dayjs();
