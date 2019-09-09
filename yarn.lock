@@ -3617,6 +3617,11 @@ table@^5.2.3:
     slice-ansi "^2.1.0"
     string-width "^3.0.0"
 
+tailing-stream@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/tailing-stream/-/tailing-stream-0.2.0.tgz#4918471595369d9988fc557398168c91a827ecf9"
+  integrity sha1-SRhHFZU2nZmI/FVzmBaMkagn7Pk=
+
 tar@^4:
   version "4.4.10"
   resolved "https://registry.yarnpkg.com/tar/-/tar-4.4.10.tgz#946b2810b9a5e0b26140cf78bea6b0b0d689eba1"

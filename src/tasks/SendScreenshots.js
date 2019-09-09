@@ -20,7 +20,7 @@ const MESSAGES = {
 class SendScreenshots {
   listeners = ({
     [EVENTS.SCREENSHOTS]: (query) => this._sendScreenshotsFromFolder(query),
-    [EVENTS.FOLDERS]: (query) => this._getFolders(query),
+    [EVENTS.FOLDERS]: () => this._getFolders(),
   });
 
   constructor(socket) {
@@ -44,7 +44,7 @@ class SendScreenshots {
 
   _sendScreenshotsFromFolder({ date, limit, offset }) {
     if(date) {
-      if(this.dates[date]) {
+      if(this.dates && this.dates[date]) {
         let screenshots = this.dates[date].slice(offset).slice(0, limit).map(item => ({
           name: item, data: fs.readFileSync(config.app.screenshotsFolder + item)
         }));
