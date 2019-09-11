@@ -1,6 +1,7 @@
 import config from './config';
 import SendScreenshots from './tasks/SendScreenshots';
 import SendLogs from './tasks/SendLogs';
+import SendOutput from './tasks/SendOutput';
 import { getLogger } from './services/logger';
 import { init } from './services/socket.io';
 
@@ -18,6 +19,7 @@ const initApp = () => {
     logger.info(`${socket.id} connected`);
     new SendScreenshots(socket);
     new SendLogs(socket);
+    new SendOutput(socket);
     socket.on('disconnect', () => logger.info(`${socket.id} disconnected`));
   });
   socket.listen(config.app.port);

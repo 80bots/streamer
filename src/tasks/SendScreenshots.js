@@ -29,7 +29,6 @@ class SendScreenshots {
     this.watcher.on('add', this._onScreenShotAdded);
 
     for (let event in this.listeners) {
-      // eslint-disable-next-line no-prototype-builtins
       if(this.listeners.hasOwnProperty(event)) {
         socket.on(event, this.listeners[event]);
       }
@@ -56,7 +55,6 @@ class SendScreenshots {
   _transformToArray(object) {
     let result = [];
     for(let key in object) {
-      // eslint-disable-next-line no-prototype-builtins
       if(object.hasOwnProperty(key)) {
         result.push({ day: key, ...object[key] });
       }

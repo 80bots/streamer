@@ -16,7 +16,7 @@ const MESSAGES = {
 
 class SendLogs {
   listeners = ({
-    [EVENTS.GET_LOGS]: (query) => { this._getLog(query); this._startWatcher() }
+    [EVENTS.GET_LOGS]: (query) => { this._getLog(query); this._startWatcher(); }
   });
 
   constructor(socket) {
