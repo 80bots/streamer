@@ -16,8 +16,9 @@ process.on('unhandledRejection', error => {
 const initApp = () => {
   logger.info('Initializing socket server...');
   const socket = init();
-  socket.on('connect', (socket) => {
-    if(valid(socket)) {
+  socket.on('connect', async (socket) => {
+    const isValid = await valid(socket);
+    if(isValid) {
       logger.info(`${socket.id} connected`);
       new SendScreenshots(socket);
       new SendLogs(socket);
