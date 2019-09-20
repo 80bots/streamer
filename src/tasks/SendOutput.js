@@ -42,7 +42,7 @@ class SendOutput {
   }
 
   _parseOutput() {
-    const output = JSON.parse(fs.readFileSync(config.app.outputFolder + 'output.json').toString());
+    const output = JSON.parse(fs.readFileSync(config.app.outputPath).toString());
     let dates = {};
     let folders = [];
     for (const date in output) {

@@ -17,7 +17,7 @@ const MESSAGES = {
 class SendLogs {
   listeners = ({
     [EVENTS.GET_LOGS]: (query = { init: false }) => {
-      const path = query.init ? config.app.initLogPath : config.app.logsFolder + 'log.txt';
+      const path = query.init ? config.app.initLogPath : config.app.logPath;
       this._getLog(path);
       this._startWatcher(path);
     }
