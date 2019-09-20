@@ -37,8 +37,10 @@ class SendScreenshots {
   }
 
   _onScreenShotAdded = (path) => {
-    const name = path.split('/')[path.split('/').length - 1];
-    this.socket.emit(MESSAGES.SCREENSHOT, { name, data: fs.readFileSync(path) });
+    setTimeout(() => {
+      const name = path.split('/')[path.split('/').length - 1];
+      this.socket.emit(MESSAGES.SCREENSHOT, { name, data: fs.readFileSync(path) });
+    }, 500);
   };
 
   _sendScreenshotsFromFolder({ date, limit, offset }) {
