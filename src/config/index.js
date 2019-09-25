@@ -9,7 +9,7 @@ const config = {
     screenshotsFolder: env.SCREENSHOTS_FOLDER || os.homedir() + '/.screenshots/',
     logPath:           env.LOG_PATH || os.homedir() + '/puppeteer/logs/log.log',
     initLogPath:       env.INIT_LOG_PATH || '/var/log/cloud-init-output.log',
-    outputPath:        env.OUTPUT_PATH || os.homedir() + '/puppeteer/db/output.json',
+    outputFolder:      env.OUTPUT_FOLDER || os.homedir() + '/puppeteer/output/',
   },
 };
 

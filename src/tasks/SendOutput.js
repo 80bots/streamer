@@ -2,26 +2,37 @@ import config from '../config';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import fs from 'fs';
+import { AVAILABLE_COLORS, getLogger } from '../services/logger';
 
 dayjs.extend(customParseFormat);
 
 const EVENTS = {
-  GET_OUTPUT: 'get_output',
-  GET_FOLDERS: 'get_output_folders',
-  GET_FULL_OUTPUT: 'get_full_output'
+  GET_FULL_OUTPUT: 'output.full',
+  GET_AVAILABLE: 'output.available',
+  GET_FOLDERS: 'output.folders',
+  GET_OUTPUT: 'output.data'
 };
 
 const MESSAGES = {
-  OUTPUT: 'output',
-  FOLDERS: 'output_folders',
-  FULL: 'output_full'
+  AVAILABLE: 'output.available',
+  FOLDERS: 'output.folders',
+  OUTPUT: 'output.data',
+  FULL: 'output.full'
 };
+
+const OUTPUT_TYPES = {
+  JSON: 'json',
+  IMAGES: 'images'
+};
+
+const logger = getLogger('output', AVAILABLE_COLORS.YELLOW);
 
 class SendOutput {
   listeners = ({
+    [EVENTS.GET_AVAILABLE]: () => this._getAvailableOutputs(),
     [EVENTS.GET_OUTPUT]: (query = {}) => this._getOutput(query),
-    [EVENTS.GET_FOLDERS]: () => this._getFolders(),
-    [EVENTS.GET_FULL_OUTPUT]: () => this._getFullOutput()
+    [EVENTS.GET_FOLDERS]: (query = {}) => this._getFolders(query),
+    [EVENTS.GET_FULL_OUTPUT]: (query = {}) => this._getFullOutput(query)
   });
 
   constructor(socket) {
@@ -33,46 +44,66 @@ class SendOutput {
     }
   }
 
-  _getOutput({ folder }) {
+  _getAvailableOutputs() {
+    const available = fs.readdirSync(config.app.outputFolder, { withFileTypes: true })
+      .filter(dir => dir.isDirectory())
+      .map(dir => dir.name);
+    this.socket.emit(MESSAGES.AVAILABLE, available);
+  }
+
+  _getOutput({ folder, type }) {
     let arr = [];
-    if(this.dates[folder]) {
-      arr = this.dates[folder];
+    if(this[type]?.[folder]) {
+      arr = this[type][folder];
     }
     this.socket.emit(MESSAGES.OUTPUT, arr);
   }
 
-  _parseOutput() {
-    const output = JSON.parse(fs.readFileSync(config.app.outputPath).toString());
-    let dates = {};
+  _getFullOutput({ type }) {
+    if(this[type]) {
+      this.socket.emit(MESSAGES.FULL, Object.values(this[type]));
+    }
+  }
+
+  _getFolders({ type }) {
     let folders = [];
-    for (const date in output) {
-      if(output.hasOwnProperty(date)) {
-        let data = [];
-        for (let dataKey in output[date]) {
-          if(output[date].hasOwnProperty(dataKey)) {
-            data.push({ dataKey, ...output[date][dataKey]});
-          }
-        }
-        dates[date] = data;
-        folders.push(date);
-      }
-    }
-    this.dates = dates;
-    return folders;
-  }
-
-  _getFolders() {
     try {
-      this.socket.emit(MESSAGES.FOLDERS, this._parseOutput());
+      if(!Object.values(OUTPUT_TYPES).includes(type)) throw new Error('No such type');
+      const files = fs.readdirSync(config.app.outputFolder + type, { withFileTypes: true })
+        .filter(item => !item.isDirectory())
+        .map(item => item.name);
+      switch (type) {
+        case OUTPUT_TYPES.JSON: { folders = this._processJsonType(files); break; }
+        case OUTPUT_TYPES.IMAGES: { folders = this._processImageType(files); break; }
+      }
+      if(!folders) folders = [];
     } catch (e) {
-      this.socket.emit(MESSAGES.FOLDERS, []);
+      logger.error(e);
+    } finally {
+      this.socket.emit(MESSAGES.FOLDERS, folders);
     }
   }
 
-  _getFullOutput() {
-    if(!this.dates) this._parseOutput();
-    return this.socket.emit(MESSAGES.FULL, this.dates);
-  }
+  _processJsonType = (files) => {
+    if(!this[OUTPUT_TYPES.JSON]) this[OUTPUT_TYPES.JSON] = {};
+    return files.map(file => {
+      const date = dayjs(file.split('.')[0]).format('YYYY-MM-DD HH:mm:ss');
+      this[OUTPUT_TYPES.JSON][date] =
+        JSON.parse(fs.readFileSync(config.app.outputFolder + OUTPUT_TYPES.JSON + '/' + file).toString());
+      return date;
+    });
+  };
+
+  _processImageType = (files) => {
+    if(!this[OUTPUT_TYPES.IMAGES]) this[OUTPUT_TYPES.IMAGES] = { all: [] };
+    files.forEach(file => {
+      this[OUTPUT_TYPES.IMAGES].all.push({
+        name: file,
+        data: fs.readFileSync(config.app.outputFolder + OUTPUT_TYPES.IMAGES + '/' + file)
+      });
+    });
+    return ['all'];
+  };
 }
 
 export default SendOutput;
