@@ -2,6 +2,7 @@ import config from '../config';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import fs from 'fs';
+import archiver from 'archiver';
 import { AVAILABLE_COLORS, getLogger } from '../services/logger';
 
 dayjs.extend(customParseFormat);
@@ -24,6 +25,8 @@ const OUTPUT_TYPES = {
   JSON: 'json',
   IMAGES: 'images'
 };
+
+const IMAGES_ZIP_PATH = 'images.zip';
 
 const logger = getLogger('output', AVAILABLE_COLORS.YELLOW);
 
@@ -51,17 +54,25 @@ class SendOutput {
     this.socket.emit(MESSAGES.AVAILABLE, available);
   }
 
-  _getOutput({ folder, type }) {
+  _getOutput({ folder, type, limit, offset }) {
     let arr = [];
     if(this[type]?.[folder]) {
-      arr = this[type][folder];
+      switch (type) {
+        case OUTPUT_TYPES.JSON: { arr = this[type][folder]; break; }
+        case OUTPUT_TYPES.IMAGES: { arr = this[type][folder].slice(offset).slice(0, limit); break; }
+      }
     }
     this.socket.emit(MESSAGES.OUTPUT, arr);
   }
 
   _getFullOutput({ type }) {
     if(this[type]) {
-      this.socket.emit(MESSAGES.FULL, Object.values(this[type]));
+      switch (type) {
+        case OUTPUT_TYPES.JSON:
+          return this.socket.emit(MESSAGES.FULL, Object.values(this[type]));
+        case OUTPUT_TYPES.IMAGES:
+          return this._compressImages();
+      }
     }
   }
 
@@ -102,7 +113,30 @@ class SendOutput {
         data: fs.readFileSync(config.app.outputFolder + OUTPUT_TYPES.IMAGES + '/' + file)
       });
     });
-    return ['all'];
+    return [{ name: 'all', total: files.length }];
+  };
+
+  _compressImages = () => {
+    logger.info('Compressing images...');
+    try {
+      const output = fs.createWriteStream( IMAGES_ZIP_PATH);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('warning', logger.error);
+      archive.on('error', logger.error);
+      output.on('close', () => {
+        logger.info(`Compressed to ${archive.pointer()} Bytes`);
+        this.socket.emit(MESSAGES.FULL, fs.readFileSync(IMAGES_ZIP_PATH));
+        fs.unlinkSync(IMAGES_ZIP_PATH);
+      });
+      this[OUTPUT_TYPES.IMAGES].all.forEach(item => {
+        archive.append(item.data, { name: item.name });
+      });
+      archive.pipe(output);
+      archive.finalize();
+    } catch (e) {
+      logger.error(e);
+    }
+
   };
 }
 
