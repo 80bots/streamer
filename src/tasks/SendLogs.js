@@ -35,20 +35,17 @@ class SendLogs {
   _startWatcher(path) {
     if(this.watcher) this.watcher.close();
 
-    const file = fs.openSync(path, 'r');
-
     this.watcher = chokidar.watch(path, {
       persistent: true, usePolling: true, ignorePermissionErrors: true
     });
 
     this.watcher.on('change', (path, stats) => {
-      setTimeout(() => {
-        let length = stats.size - this.currentSize;
-        let buff = new Buffer.from(new ArrayBuffer(length));
-        fs.readSync(file, buff, 0, length, this.currentSize);
-        this.currentSize = stats.size;
-        this.socket.emit(MESSAGES.LOG, buff);
-      }, 500);
+      const file = fs.openSync(path, 'r');
+      let length = stats.size - this.currentSize;
+      let buff = new Buffer.from(new ArrayBuffer(length));
+      fs.readSync(file, buff, 0, length, this.currentSize);
+      this.currentSize = stats.size;
+      this.socket.emit(MESSAGES.LOG, buff);
     });
   }
 
