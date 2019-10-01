@@ -3,9 +3,8 @@ import socketIo from 'socket.io';
 let ioInstance = null;
 
 export const init = () => {
-  ioInstance = socketIo();
+  ioInstance = socketIo(null, {
+    pingTimeout: 60000
+  });
   return ioInstance;
 };
-
-//must be called in app init
-export const IO = () => ioInstance;

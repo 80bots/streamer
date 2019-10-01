@@ -48,9 +48,12 @@ class SendOutput {
   }
 
   _getAvailableOutputs() {
-    const available = fs.readdirSync(config.app.outputFolder, { withFileTypes: true })
-      .filter(dir => dir.isDirectory())
-      .map(dir => dir.name);
+    let available = [];
+    if(fs.existsSync(config.app.outputFolder)) {
+      available = fs.readdirSync(config.app.outputFolder, { withFileTypes: true })
+        .filter(dir => dir.isDirectory())
+        .map(dir => dir.name);
+    }
     this.socket.emit(MESSAGES.AVAILABLE, available);
   }
 
@@ -79,7 +82,7 @@ class SendOutput {
   _getFolders({ type }) {
     let folders = [];
     try {
-      if(!Object.values(OUTPUT_TYPES).includes(type)) throw new Error('No such type');
+      if(!Object.values(OUTPUT_TYPES).includes(type)) return new Error('No such type');
       const files = fs.readdirSync(config.app.outputFolder + type, { withFileTypes: true })
         .filter(item => !item.isDirectory())
         .map(item => item.name);
