@@ -10,6 +10,7 @@ const config = {
     logPath:           env.LOG_PATH || os.homedir() + '/puppeteer/logs/log.log',
     initLogPath:       env.INIT_LOG_PATH || '/var/log/cloud-init-output.log',
     outputFolder:      env.OUTPUT_FOLDER || os.homedir() + '/puppeteer/output/',
+    dateFormat:        env.TIMESTAMP_FORMAT || 'YYYY-MM-DD-HH-mm-ss'
   },
 };
 

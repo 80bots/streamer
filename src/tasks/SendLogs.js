@@ -6,17 +6,17 @@ import fs from 'fs';
 
 dayjs.extend(customParseFormat);
 
-const EVENTS = {
-  GET_LOGS: 'get_logs'
-};
-
-const MESSAGES = {
-  LOG: 'log'
-};
-
 class SendLogs {
+  static EVENTS = {
+    GET_LOGS: 'get_logs'
+  };
+
+  static MESSAGES = {
+    LOG: 'log'
+  };
+
   listeners = ({
-    [EVENTS.GET_LOGS]: (query = { init: false }) => {
+    [SendLogs.EVENTS.GET_LOGS]: (query = { init: false }) => {
       const path = query.init ? config.app.initLogPath : config.app.logPath;
       this._getLog(path);
       this._startWatcher(path);
@@ -45,14 +45,14 @@ class SendLogs {
       let buff = new Buffer.from(new ArrayBuffer(length));
       fs.readSync(file, buff, 0, length, this.currentSize);
       this.currentSize = stats.size;
-      this.socket.emit(MESSAGES.LOG, buff);
+      this.socket.emit(SendLogs.MESSAGES.LOG, buff);
     });
   }
 
   _getLog(path) {
     const buff = fs.readFileSync(path);
     this.currentSize = buff.length;
-    this.socket.emit(MESSAGES.LOG, buff);
+    this.socket.emit(SendLogs.MESSAGES.LOG, buff);
   }
 }
 

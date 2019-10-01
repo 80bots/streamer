@@ -16,6 +16,9 @@ process.on('unhandledRejection', error => {
 const initApp = () => {
   logger.info('Initializing socket server...');
   const socket = init();
+  // dynamically initialize storage
+  import('./services/storage');
+
   socket.on('connect', async (socket) => {
     const isValid = await valid(socket);
     if(isValid) {
