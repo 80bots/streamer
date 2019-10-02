@@ -1,15 +1,8 @@
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import fs from 'fs';
-import archiver from 'archiver';
-import storage, { OUTPUT_TYPES } from '../services/storage';
-import { AVAILABLE_COLORS, getLogger } from '../services/logger';
+import storage from '../services/storage';
 
 dayjs.extend(customParseFormat);
-
-const IMAGES_ZIP_PATH = 'images.zip';
-
-const logger = getLogger('output', AVAILABLE_COLORS.YELLOW);
 
 class SendOutput {
   static EVENTS = {
@@ -51,41 +44,12 @@ class SendOutput {
   }
 
   _getFullOutput({ type }) {
-    if(this[type]) {
-      switch (type) {
-        case OUTPUT_TYPES.JSON:
-          return this.socket.emit(SendOutput.MESSAGES.FULL, Object.values(this[type]));
-        case OUTPUT_TYPES.IMAGES:
-          return this._compressImages();
-      }
-    }
+    storage.getFullOutput(type).then(data => this.socket.emit(SendOutput.MESSAGES.FULL, data));
   }
 
   _getFolders({ type }) {
     this.socket.emit(SendOutput.MESSAGES.FOLDERS, storage.getFolders(type));
   }
-
-  _compressImages = () => {
-    logger.info('Compressing images...');
-    try {
-      const output = fs.createWriteStream(IMAGES_ZIP_PATH);
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      archive.on('warning', logger.error);
-      archive.on('error', logger.error);
-      output.on('close', () => {
-        logger.info(`Compressed to ${archive.pointer()} Bytes`);
-        this.socket.emit(SendOutput.MESSAGES.FULL, fs.readFileSync(IMAGES_ZIP_PATH));
-        fs.unlinkSync(IMAGES_ZIP_PATH);
-      });
-      this[OUTPUT_TYPES.IMAGES].all.forEach(item => {
-        archive.append(item.data, { name: item.name });
-      });
-      archive.pipe(output);
-      archive.finalize();
-    } catch (e) {
-      logger.error(e);
-    }
-  };
 }
 
 export default SendOutput;

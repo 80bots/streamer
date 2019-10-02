@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import config from '../config';
 import dayjs from 'dayjs';
+import archiver from 'archiver';
 import { watch } from 'chokidar';
 import { AVAILABLE_COLORS, getLogger } from './logger';
 
@@ -16,6 +17,8 @@ export const OUTPUT_TYPES = {
   IMAGES: 'images',
   SCREENSHOTS: 'screenshots',
 };
+
+const IMAGES_ZIP_PATH = 'images.zip';
 
 class Storage {
   constructor() {
@@ -73,12 +76,27 @@ class Storage {
           return JSON.parse(fs.readFileSync(this._resolvePath(type) + '/' + this[type][folder].file));
 
         case OUTPUT_TYPES.SCREENSHOTS:
-        case OUTPUT_TYPES.IMAGES:
+        case OUTPUT_TYPES.IMAGES: {
+          console.log(this[type]);
           return this[type][folder].files.slice(offset).slice(0, limit).map(item => this._toImageFile(type, item));
+        }
+
       }
     } else {
       //TODO: proper exception here
       return [];
+    }
+  }
+
+  async getFullOutput(type) {
+    switch (type) {
+      case OUTPUT_TYPES.JSON:
+        if(!Object.keys(this[type]).length) this._getJsonFolders();
+        return Object.values(this[type]).reduce((all, current) => {
+          return all.concat(JSON.parse(fs.readFileSync(this._resolvePath(type) + '/' + current.file)));
+        }, []);
+      case OUTPUT_TYPES.IMAGES:
+        return this._compressImages();
     }
   }
 
@@ -159,7 +177,7 @@ class Storage {
   }
 
   _appendFolderFiles = (file, type) => {
-    const folder = this._getDate(file);
+    const folder = type === OUTPUT_TYPES.IMAGES ? dayjs().format('YYYY-MM-DD') : this._getDate(file);
     if(this[type][folder]) {
       this[type][folder].files.push(file);
       this[type][folder].total++;
@@ -207,6 +225,30 @@ class Storage {
     });
     return Object.values(this[type]);
   }
+
+  _compressImages = async () => new Promise((resolve) => {
+    logger.info('Compressing images...');
+    if(!Object.keys(this[OUTPUT_TYPES.IMAGES]).length) this._getImageFolders(OUTPUT_TYPES.IMAGES);
+    const key = Object.keys(this[OUTPUT_TYPES.IMAGES])[0];
+    try {
+      const output = fs.createWriteStream(IMAGES_ZIP_PATH);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+      archive.on('warning', logger.error);
+      archive.on('error', logger.error);
+      output.on('close', () => {
+        logger.info(`Compressed to ${archive.pointer()} Bytes`);
+        resolve(fs.readFileSync(IMAGES_ZIP_PATH));
+        fs.unlinkSync(IMAGES_ZIP_PATH);
+      });
+      this[OUTPUT_TYPES.IMAGES][key].files.forEach(item => {
+        archive.append(fs.readFileSync(this._resolvePath(OUTPUT_TYPES.IMAGES) + '/' + item), { name: item });
+      });
+      archive.pipe(output);
+      archive.finalize();
+    } catch (e) {
+      logger.error(e);
+    }
+  });
 
   getLog(type) {
     const logPath = this._resolvePath(type);
