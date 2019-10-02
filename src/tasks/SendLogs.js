@@ -33,26 +33,30 @@ class SendLogs {
   }
 
   _startWatcher(path) {
-    if(this.watcher) this.watcher.close();
+    if(fs.existsSync(path)) {
+      if(this.watcher) this.watcher.close();
 
-    this.watcher = chokidar.watch(path, {
-      persistent: true, usePolling: true, ignorePermissionErrors: true
-    });
+      this.watcher = chokidar.watch(path, {
+        persistent: true, usePolling: true, ignorePermissionErrors: true
+      });
 
-    this.watcher.on('change', (path, stats) => {
-      const file = fs.openSync(path, 'r');
-      let length = stats.size - this.currentSize;
-      let buff = new Buffer.from(new ArrayBuffer(length));
-      fs.readSync(file, buff, 0, length, this.currentSize);
-      this.currentSize = stats.size;
-      this.socket.emit(MESSAGES.LOG, buff);
-    });
+      this.watcher.on('change', (path, stats) => {
+        const file = fs.openSync(path, 'r');
+        let length = stats.size - this.currentSize;
+        let buff = new Buffer.from(new ArrayBuffer(length));
+        fs.readSync(file, buff, 0, length, this.currentSize);
+        this.currentSize = stats.size;
+        this.socket.emit(MESSAGES.LOG, buff);
+      });
+    }
   }
 
   _getLog(path) {
-    const buff = fs.readFileSync(path);
-    this.currentSize = buff.length;
-    this.socket.emit(MESSAGES.LOG, buff);
+    if(fs.existsSync(path)) {
+      const buff = fs.readFileSync(path);
+      this.currentSize = buff.length;
+      this.socket.emit(MESSAGES.LOG, buff);
+    }
   }
 }
 
