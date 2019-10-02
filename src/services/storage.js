@@ -106,14 +106,16 @@ class Storage {
   }
 
   _onFileAdded = (filePath, type, sender) => {
-    const fileName = filePath.split('/')[filePath.split('/').length - 1];
-    this._appendFolderFiles(fileName, type);
-    switch (type) {
-      case OUTPUT_TYPES.SCREENSHOTS:
-      case OUTPUT_TYPES.IMAGES:
-        return sender(this._toImageFile(type, fileName));
-    }
-
+    // wait a little to let file be written
+    setTimeout(() => {
+      const fileName = filePath.split('/')[filePath.split('/').length - 1];
+      this._appendFolderFiles(fileName, type);
+      switch (type) {
+        case OUTPUT_TYPES.SCREENSHOTS:
+        case OUTPUT_TYPES.IMAGES:
+          return sender(this._toImageFile(type, fileName));
+      }
+    }, 500);
   };
 
   _onFileChanged = (filePath, stats, type, sender) => {
