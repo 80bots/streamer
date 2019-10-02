@@ -1,14 +1,8 @@
-import config from '../config';
-import fs from 'fs';
 import dayjs from 'dayjs';
-import chokidar from 'chokidar';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import storage, { OUTPUT_TYPES } from '../services/storage';
-import { AVAILABLE_COLORS, getLogger } from '../services/logger';
 
 dayjs.extend(customParseFormat);
-
-const logger = getLogger('screenshots', AVAILABLE_COLORS.CYAN);
 
 class SendScreenshots {
   static EVENTS = {
@@ -24,7 +18,10 @@ class SendScreenshots {
 
   listeners = ({
     [SendScreenshots.EVENTS.SCREENSHOTS]: (query) => this._sendScreenshotsFromFolder(query),
-    [SendScreenshots.EVENTS.FOLDERS]: () => storage.getFolders('screenshots'),
+    [SendScreenshots.EVENTS.FOLDERS]: () => {
+      storage._initWatcher(OUTPUT_TYPES.SCREENSHOTS, this._onScreenShotAdded);
+      this._getFolders();
+    },
   });
 
   constructor(socket) {
@@ -34,17 +31,10 @@ class SendScreenshots {
         socket.on(event, this.listeners[event]);
       }
     }
-    this.watcher = chokidar.watch(config.app.screenshotsFolder, { persistent: true, ignoreInitial: true });
-    this.watcher.on('add', this._onScreenShotAdded);
-    this._getFolders();
-    logger.info('Watcher initialized');
   }
 
-  _onScreenShotAdded = (path) => {
-    setTimeout(() => {
-      const name = path.split('/')[path.split('/').length - 1];
-      this.socket.emit(SendScreenshots.MESSAGES.SCREENSHOT, { name, data: fs.readFileSync(path) });
-    }, 500);
+  _onScreenShotAdded = (image) => {
+    this.socket.emit(SendScreenshots.MESSAGES.SCREENSHOT, image);
   };
 
   _sendScreenshotsFromFolder(query) {
