@@ -1,25 +1,24 @@
-import config from '../config';
 import dayjs from 'dayjs';
-import chokidar from 'chokidar';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import fs from 'fs';
+import storage, { OUTPUT_TYPES } from '../services/storage';
 
 dayjs.extend(customParseFormat);
 
-const EVENTS = {
-  GET_LOGS: 'get_logs'
-};
-
-const MESSAGES = {
-  LOG: 'log'
-};
-
 class SendLogs {
+  static EVENTS = {
+    GET_LOGS: 'get_logs'
+  };
+
+  static MESSAGES = {
+    LOG: 'log'
+  };
+
   listeners = ({
-    [EVENTS.GET_LOGS]: (query = { init: false }) => {
-      const path = query.init ? config.app.initLogPath : config.app.logPath;
-      this._getLog(path);
-      this._startWatcher(path);
+    [SendLogs.EVENTS.GET_LOGS]: (query = { init: false }) => {
+      const type = query.init ? OUTPUT_TYPES.LOG.INIT : OUTPUT_TYPES.LOG.WORK;
+      this._getLog(type);
+      if(this.watcher) this.watcher.close();
+      this.watcher = storage._initWatcher(type, this._onLog);
     }
   });
 
@@ -32,31 +31,12 @@ class SendLogs {
     }
   }
 
-  _startWatcher(path) {
-    if(fs.existsSync(path)) {
-      if(this.watcher) this.watcher.close();
+  _onLog = (chunk) => {
+    this.socket.emit(SendLogs.MESSAGES.LOG, chunk);
+  };
 
-      this.watcher = chokidar.watch(path, {
-        persistent: true, usePolling: true, ignorePermissionErrors: true
-      });
-
-      this.watcher.on('change', (path, stats) => {
-        const file = fs.openSync(path, 'r');
-        let length = stats.size - this.currentSize;
-        let buff = new Buffer.from(new ArrayBuffer(length));
-        fs.readSync(file, buff, 0, length, this.currentSize);
-        this.currentSize = stats.size;
-        this.socket.emit(MESSAGES.LOG, buff);
-      });
-    }
-  }
-
-  _getLog(path) {
-    if(fs.existsSync(path)) {
-      const buff = fs.readFileSync(path);
-      this.currentSize = buff.length;
-      this.socket.emit(MESSAGES.LOG, buff);
-    }
+  _getLog(type) {
+    this.socket.emit(SendLogs.MESSAGES.LOG, storage.getLog(type));
   }
 }
 
