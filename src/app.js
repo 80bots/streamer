@@ -3,10 +3,15 @@ import SendScreenshots from './tasks/SendScreenshots';
 import SendLogs from './tasks/SendLogs';
 import SendOutput from './tasks/SendOutput';
 import valid from './middlewares/auth';
+import * as Sentry from '@sentry/node';
 import { getLogger } from './services/logger';
 import { init } from './services/socket.io';
 
 const logger = getLogger('app');
+
+if(process.env?.NODE_ENV === 'production') {
+  Sentry.init({ dsn: config.app.sentryDSN });
+}
 
 process.on('unhandledRejection', error => {
   logger.error(error);
