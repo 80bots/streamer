@@ -77,8 +77,7 @@ class Storage {
 
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES: {
-          console.log(this[type]);
-          return this[type][folder].files.slice(offset).slice(0, limit).map(item => this._toImageFile(type, item));
+          return this[type][folder].files.reverse().slice(offset).slice(0, limit).map(item => this._toImageFile(type, item));
         }
 
       }

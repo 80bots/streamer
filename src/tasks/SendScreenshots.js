@@ -19,7 +19,8 @@ class SendScreenshots {
   listeners = ({
     [SendScreenshots.EVENTS.SCREENSHOTS]: (query) => this._sendScreenshotsFromFolder(query),
     [SendScreenshots.EVENTS.FOLDERS]: () => {
-      storage._initWatcher(OUTPUT_TYPES.SCREENSHOTS, this._onScreenShotAdded);
+      if(this.watcher) this.watcher.close();
+      this.watcher = storage._initWatcher(OUTPUT_TYPES.SCREENSHOTS, this._onScreenShotAdded);
       this._getFolders();
     },
   });
