@@ -198,8 +198,10 @@ class Storage {
   _appendFolderFiles = (file, type) => {
     const folder = type === OUTPUT_TYPES.IMAGES ? dayjs().format('YYYY-MM-DD') : this._getDate(file);
     if(this[type][folder]) {
-      this[type][folder].files.push(file);
-      this[type][folder].total++;
+      if(!this[type][folder].files.includes(file)) {
+        this[type][folder].files.push(file);
+        this[type][folder].total++;
+      }
     } else {
       this._initFolder(file, type);
     }
