@@ -272,9 +272,13 @@ class Storage {
   });
 
   getLog(type) {
-    const logPath = this._resolvePath(type);
-    const buff = fs.readFileSync(logPath);
-    this.currentSize = buff.length;
+    let buff = new Buffer(0);
+    if(fs.existsSync(this._resolvePath(type))) {
+      const logPath = this._resolvePath(type);
+      buff = fs.readFileSync(logPath);
+      this.currentSize = buff.length;
+
+    }
     return buff;
   }
 }
