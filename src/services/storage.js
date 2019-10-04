@@ -26,6 +26,10 @@ class Storage {
     Object.values(OUTPUT_TYPES).forEach(type => {
       this[type] = {};
     });
+    setTimeout(() => {
+      this._updateFolderThumbs(OUTPUT_TYPES.IMAGES);
+      this._updateFolderThumbs(OUTPUT_TYPES.SCREENSHOTS);
+    }, 10000);
   }
 
   getOutputFolders() {
@@ -77,7 +81,11 @@ class Storage {
 
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES: {
-          return this[type][folder].files.slice(offset).slice(0, limit).map(item => this._toImageFile(type, item));
+          return this[type][folder].files
+            .reverse()
+            .slice(offset)
+            .slice(0, limit)
+            .map(item => this._toImageFile(type, item));
         }
 
       }
@@ -96,6 +104,18 @@ class Storage {
         }, []);
       case OUTPUT_TYPES.IMAGES:
         return this._compressImages();
+    }
+  }
+
+  _updateFolderThumbs(type) {
+    if(this[type]) {
+      Object.keys(this[type]).forEach(folder => {
+        if(this[type][folder]?.files) {
+          const length = this[type][folder].files.length;
+          const file = this[type][folder].files[length - 1];
+          this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
+        }
+      });
     }
   }
 
@@ -218,11 +238,11 @@ class Storage {
   };
 
   _getImageFolders(type) {
-    const files = this.getFiles(type).reverse();
+    const files = this.getFiles(type);
     files.forEach(file => {
       this._appendFolderFiles(file, type);
     });
-    return Object.values(this[type]);
+    return Object.values(this[type]).reverse();
   }
 
   _compressImages = async () => new Promise((resolve) => {
