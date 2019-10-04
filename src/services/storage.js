@@ -82,6 +82,7 @@ class Storage {
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES: {
           return this[type][folder].files
+            .reverse()
             .slice(offset)
             .slice(0, limit)
             .map(item => this._toImageFile(type, item));
@@ -196,7 +197,7 @@ class Storage {
   _appendFolderFiles = (file, type) => {
     const folder = type === OUTPUT_TYPES.IMAGES ? dayjs().format('YYYY-MM-DD') : this._getDate(file);
     if(this[type][folder]) {
-      if(this[type][folder].files.indexOf(file) === -1) {
+      if(this[type][folder].files.includes(file)) {
         this[type][folder].files.push(file);
         this[type][folder].total++;
       }
