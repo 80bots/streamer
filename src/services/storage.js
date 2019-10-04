@@ -82,7 +82,6 @@ class Storage {
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES: {
           return this[type][folder].files
-            .reverse()
             .slice(offset)
             .slice(0, limit)
             .map(item => this._toImageFile(type, item));
@@ -111,8 +110,7 @@ class Storage {
     if(this[type]) {
       Object.keys(this[type]).forEach(folder => {
         if(this[type][folder]?.files) {
-          const length = this[type][folder].files.length;
-          const file = this[type][folder].files[length - 1];
+          const file = this[type][folder].files[0];
           this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
         }
       });
@@ -198,7 +196,7 @@ class Storage {
   _appendFolderFiles = (file, type) => {
     const folder = type === OUTPUT_TYPES.IMAGES ? dayjs().format('YYYY-MM-DD') : this._getDate(file);
     if(this[type][folder]) {
-      if(!this[type][folder].files.includes(file)) {
+      if(this[type][folder].files.indexOf(file) === -1) {
         this[type][folder].files.push(file);
         this[type][folder].total++;
       }
@@ -277,7 +275,6 @@ class Storage {
       const logPath = this._resolvePath(type);
       buff = fs.readFileSync(logPath);
       this.currentSize = buff.length;
-
     }
     return buff;
   }
