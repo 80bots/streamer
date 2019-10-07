@@ -3,6 +3,7 @@ import path from 'path';
 import config from '../config';
 import dayjs from 'dayjs';
 import archiver from 'archiver';
+import { S3 } from 'aws-sdk';
 import { watch } from 'chokidar';
 import { AVAILABLE_COLORS, getLogger } from './logger';
 
@@ -239,11 +240,11 @@ class Storage {
   };
 
   _getImageFolders(type) {
-    const files = this.getFiles(type);
+    const files = this.getFiles(type).reverse();
     files.forEach(file => {
       this._appendFolderFiles(file, type);
     });
-    return Object.values(this[type]).reverse();
+    return Object.values(this[type]);
   }
 
   _compressImages = async () => new Promise((resolve) => {
