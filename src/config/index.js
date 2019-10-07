@@ -15,10 +15,10 @@ const config = {
   },
   s3: {
     apiVersion: 'latest',
-    key: '',
-    secret: '',
-    region: '',
-    bucket: ''
+    key:        'AKIAQOGPXKZ2F3RBT65W',
+    secret:     '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',
+    region:     'us-east-2',
+    bucket:     '80bots/streamer-data'
   }
 };
 

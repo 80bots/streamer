@@ -3,7 +3,7 @@ import path from 'path';
 import config from '../config';
 import dayjs from 'dayjs';
 import archiver from 'archiver';
-import { S3 } from 'aws-sdk';
+import { putObject, getObject } from './s3';
 import { watch } from 'chokidar';
 import { AVAILABLE_COLORS, getLogger } from './logger';
 
@@ -27,7 +27,7 @@ class Storage {
     Object.values(OUTPUT_TYPES).forEach(type => {
       this[type] = {};
     });
-    setTimeout(() => {
+    setInterval(() => {
       this._updateFolderThumbs(OUTPUT_TYPES.IMAGES);
       this._updateFolderThumbs(OUTPUT_TYPES.SCREENSHOTS);
     }, 10000);
@@ -98,6 +98,16 @@ class Storage {
     }
   }
 
+  getLog(type) {
+    let buff = new Buffer(0);
+    if(fs.existsSync(this._resolvePath(type))) {
+      const logPath = this._resolvePath(type);
+      buff = fs.readFileSync(logPath);
+      this.currentSize = buff.length;
+    }
+    return buff;
+  }
+
   async getFullOutput(type) {
     switch (type) {
       case OUTPUT_TYPES.JSON:
@@ -115,7 +125,6 @@ class Storage {
       Object.keys(this[type]).forEach(folder => {
         if(this[type][folder]?.files) {
           const file = this[type][folder].files.slice().reverse()[0];
-          logger.info(`Updating thumb of ${folder} to ${file}`);
           this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
         }
       });
@@ -274,14 +283,8 @@ class Storage {
     }
   });
 
-  getLog(type) {
-    let buff = new Buffer(0);
-    if(fs.existsSync(this._resolvePath(type))) {
-      const logPath = this._resolvePath(type);
-      buff = fs.readFileSync(logPath);
-      this.currentSize = buff.length;
-    }
-    return buff;
+  _syncWithS3() {
+    // wip
   }
 }
 
