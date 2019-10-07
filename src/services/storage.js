@@ -115,6 +115,7 @@ class Storage {
       Object.keys(this[type]).forEach(folder => {
         if(this[type][folder]?.files) {
           const file = this[type][folder].files.slice().reverse()[0];
+          logger.info(`Updating thumb of ${folder} to ${file}`);
           this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
         }
       });
