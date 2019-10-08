@@ -64,7 +64,7 @@ export const setInstanceRegionAndName = async () => {
     Filters: [
       {
         Name: 'resource-id',
-        Values: [ process.env.INSTANCE_ID ]
+        Values: [ config.instance.id ]
       }
     ]
   }, (err, resp) => new Promise((resolve, reject) => {
