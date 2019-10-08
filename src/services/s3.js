@@ -9,8 +9,10 @@ export const s3 = new S3({
   region:          config.s3.region,
 });
 
-export const putObject = (buffer, path, bucket = config.s3.bucket) => new Promise((resolve, reject) => {
-  s3.putObject({ Body: buffer, Key: path, Bucket: bucket }, (err, res) => {
+export const putObject = (buffer, path) => new Promise((resolve, reject) => {
+  // prepend key
+  const key = config.instance.name + '/' + path;
+  s3.putObject({ Body: buffer, Key: key, Bucket: config.s3.bucket }, (err, res) => {
     if(err) {
       reject(err);
     } else {
@@ -19,8 +21,10 @@ export const putObject = (buffer, path, bucket = config.s3.bucket) => new Promis
   });
 });
 
-export const getObject = (key, bucket) => new Promise((resolve, reject) => {
-  s3.getObject({ Key: key, Bucket: bucket }, (err, data) => {
+export const getObject = key => new Promise((resolve, reject) => {
+  // prepend key
+  const path = config.instance.name + '/' + key;
+  s3.getObject({ Key: path, Bucket: config.s3.bucket }, (err, data) => {
     if(err) {
       reject(err);
     } else {

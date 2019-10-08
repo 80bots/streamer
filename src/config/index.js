@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import os from 'os';
+import { EC2, MetadataService } from 'aws-sdk';
 
+const meta = new MetadataService();
 const env = dotenv.config().parsed || process.env;
 
 const config = {
@@ -19,6 +21,73 @@ const config = {
     secret:     'wCkSiwZiB6b2X8hk0MEqxvifE4luiwDuDwTZtDf4',
     region:     'us-east-2',
     bucket:     '80bots/streamer-data'
+  },
+  instance: {
+    name: '',
+    region: '',
+    id: ''
+  }
+};
+
+export const setInstanceId = () => new Promise((resolve, reject) => {
+  meta.request('/latest/meta-data/instance-id', (err, resp) => {
+    if(!err) {
+      config.instance.id = resp;
+      resolve(resp);
+    } else {
+      reject(err);
+    }
+  });
+});
+
+const setInstanceRegion = () => new Promise((resolve, reject) => {
+  meta.request('/latest/meta-data/placement/availability-zone', (err, resp) => {
+    if(!err) {
+      const region = resp.slice(0, resp.length - 1);
+      config.instance.region = region;
+      resolve(region);
+    } else {
+      reject(err);
+    }
+  });
+});
+
+export const setInstanceRegionAndName = async () => {
+  const ec2 = new EC2({
+    apiVersion:      config.s3.apiVersion,
+    accessKeyId:     config.s3.key,
+    secretAccessKey: config.s3.secret,
+    region:          await setInstanceRegion() || 'us-east-2',
+  });
+
+  return ec2.describeTags({
+    Filters: [
+      {
+        Name: 'resource-id',
+        Values: [ process.env.INSTANCE_ID ]
+      }
+    ]
+  }, (err, resp) => new Promise((resolve, reject) => {
+    if(!err) {
+      const name = resp.Tags.find(item => item.Key === 'Name')?.Value || 'unmatched';
+      config.instance.name = name;
+      resolve(name);
+    } else {
+      reject(err);
+    }
+  }));
+};
+
+export const setInstanceEnvs = async () => {
+  if(process.env.NODE_ENV === 'production') {
+    return Promise.all([
+      setInstanceId(), setInstanceRegionAndName()
+    ]);
+  } else {
+    config.instance.id = 'test_id';
+    config.instance.name = 'test_name';
+    config.instance.region = 'us-east-2';
+    return true;
   }
 };
 

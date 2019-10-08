@@ -3,8 +3,9 @@ import path from 'path';
 import config from '../config';
 import dayjs from 'dayjs';
 import archiver from 'archiver';
-import { putObject, getObject } from './s3';
-import { watch } from 'chokidar';
+import { performance } from 'perf_hooks';
+import { putObject } from './s3';
+import { watch} from 'chokidar';
 import { AVAILABLE_COLORS, getLogger } from './logger';
 
 const logger = getLogger('storage', AVAILABLE_COLORS.YELLOW);
@@ -19,28 +20,37 @@ export const OUTPUT_TYPES = {
   SCREENSHOTS: 'screenshots',
 };
 
+const S3_PATH = {
+  [OUTPUT_TYPES.LOG]: 'logs',
+  [OUTPUT_TYPES.JSON]: 'json',
+  [OUTPUT_TYPES.IMAGES]: 'images',
+  [OUTPUT_TYPES.SCREENSHOTS]: 'screenshots',
+  [OUTPUT_TYPES.LOG]: 'logs'
+};
+
 const IMAGES_ZIP_PATH = 'images.zip';
 
 class Storage {
   constructor() {
     logger.info('Initializing storage...');
-    Object.values(OUTPUT_TYPES).forEach(type => {
-      this[type] = {};
-    });
+    this.syncedFiles = {};
+    for (let key in OUTPUT_TYPES) {
+      this[OUTPUT_TYPES[key]] = {};
+      this.syncedFiles[OUTPUT_TYPES[key]] = [];
+    }
+    // update thumbs every minute
     setInterval(() => {
       this._updateFolderThumbs(OUTPUT_TYPES.IMAGES);
       this._updateFolderThumbs(OUTPUT_TYPES.SCREENSHOTS);
-    }, 10000);
-  }
+    }, 100000);
+    // sync with s3 every 5 minutes
+    setInterval(() => {
+      this._syncWithS3();
+    }, 300000);
+    setTimeout(() => {
+      this._syncWithS3();
+    }, 1000);
 
-  getOutputFolders() {
-    let folders = [];
-    if(fs.existsSync(config.app.outputFolder)) {
-      folders = fs.readdirSync(config.app.outputFolder, { withFileTypes: true })
-        .filter(dir => dir.isDirectory())
-        .map(dir => dir.name);
-    }
-    return folders;
   }
 
   /**
@@ -49,18 +59,31 @@ class Storage {
    *
    */
   getFolders(type) {
-    if(!Object.values(OUTPUT_TYPES).includes(type)) return new Error('No such type');
+    if (!Object.values(OUTPUT_TYPES).includes(type)) return new Error('No such type');
     try {
       switch (type) {
-        case OUTPUT_TYPES.JSON: return this._getJsonFolders();
+        case OUTPUT_TYPES.JSON:
+          return this._getJsonFolders();
 
         case OUTPUT_TYPES.SCREENSHOTS:
-        case OUTPUT_TYPES.IMAGES: return this._getImageFolders(type);
+        case OUTPUT_TYPES.IMAGES:
+          return this._getImageFolders(type);
       }
     } catch (e) {
       logger.error(e);
+      logger.debug('%o', e);
       return [];
     }
+  }
+
+  getOutputFolders() {
+    let folders = [];
+    if (fs.existsSync(config.app.outputFolder)) {
+      folders = fs.readdirSync(config.app.outputFolder, {withFileTypes: true})
+        .filter(dir => dir.isDirectory())
+        .map(dir => dir.name);
+    }
+    return folders;
   }
 
   /**
@@ -68,14 +91,14 @@ class Storage {
    * @param {('json'|'images')} folder Output folder name to read from
    *
    */
-  getFiles(folder) {
-    return fs.readdirSync(this._resolvePath(folder), { withFileTypes: true })
+  _getFiles(folder) {
+    return fs.readdirSync(this._resolvePath(folder), {withFileTypes: true})
       .filter(item => !item.isDirectory())
       .map(item => item.name);
   }
 
-  getOutputData({ folder, type, limit, offset }) {
-    if(this[type]?.[folder]) {
+  getOutputData({folder, type, limit, offset}) {
+    if (this[type]?.[folder]) {
       switch (type) {
         case OUTPUT_TYPES.JSON:
           return JSON.parse(fs.readFileSync(this._resolvePath(type) + '/' + this[type][folder].file));
@@ -100,7 +123,7 @@ class Storage {
 
   getLog(type) {
     let buff = new Buffer(0);
-    if(fs.existsSync(this._resolvePath(type))) {
+    if (fs.existsSync(this._resolvePath(type))) {
       const logPath = this._resolvePath(type);
       buff = fs.readFileSync(logPath);
       this.currentSize = buff.length;
@@ -111,7 +134,7 @@ class Storage {
   async getFullOutput(type) {
     switch (type) {
       case OUTPUT_TYPES.JSON:
-        if(!Object.keys(this[type]).length) this._getJsonFolders();
+        if (!Object.keys(this[type]).length) this._getJsonFolders();
         return Object.values(this[type]).reduce((all, current) => {
           return all.concat(JSON.parse(fs.readFileSync(this._resolvePath(type) + '/' + current.file)));
         }, []);
@@ -121,13 +144,15 @@ class Storage {
   }
 
   _updateFolderThumbs(type) {
-    if(this[type]) {
-      Object.keys(this[type]).forEach(folder => {
-        if(this[type][folder]?.files) {
-          const file = this[type][folder].files.slice().reverse()[0];
-          this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
+    if (this[type]) {
+      for (let folder in this[type]) {
+        if (this[type].hasOwnProperty(folder)) {
+          if (this[type][folder]?.files) {
+            const file = this[type][folder].files.slice().reverse()[0];
+            this[type][folder].thumbnail = fs.readFileSync(this._resolvePath(type) + '/' + file);
+          }
         }
-      });
+      }
     }
   }
 
@@ -137,7 +162,7 @@ class Storage {
     switch (type) {
       case OUTPUT_TYPES.SCREENSHOTS:
       case OUTPUT_TYPES.IMAGES: {
-        watcher = watch(typePath, { persistent: true, ignoreInitial: true });
+        watcher = watch(typePath, {persistent: true, ignoreInitial: true});
         watcher.on('add', filePath => this._onFileAdded(filePath, type, sender));
         break;
       }
@@ -145,7 +170,7 @@ class Storage {
       case OUTPUT_TYPES.JSON:
       case OUTPUT_TYPES.LOG.WORK:
       case OUTPUT_TYPES.LOG.INIT: {
-        watcher = watch(typePath, { persistent: true, usePolling: true, ignorePermissionErrors: true });
+        watcher = watch(typePath, {persistent: true, usePolling: true, ignorePermissionErrors: true});
         watcher.on('change', (filePath, stats) => this._onFileChanged(filePath, stats, type, sender));
         break;
       }
@@ -199,18 +224,18 @@ class Storage {
   }
 
   _getJsonFolders() {
-    const files = this.getFiles(OUTPUT_TYPES.JSON);
+    const files = this._getFiles(OUTPUT_TYPES.JSON);
     return files.map(file => {
       const date = dayjs(file.split('.')[0]).format('YYYY-MM-DD HH:mm:ss');
-      this[OUTPUT_TYPES.JSON][date] = { file };
+      this[OUTPUT_TYPES.JSON][date] = {file};
       return date;
     });
   }
 
   _appendFolderFiles = (file, type) => {
     const folder = type === OUTPUT_TYPES.IMAGES ? dayjs().format('YYYY-MM-DD') : this._getDate(file);
-    if(this[type][folder]) {
-      if(!this[type][folder].files.includes(file)) {
+    if (this[type][folder]) {
+      if (!this[type][folder].files.includes(file)) {
         this[type][folder].files.push(file);
         this[type][folder].total++;
       }
@@ -252,20 +277,22 @@ class Storage {
   };
 
   _getImageFolders(type) {
-    const files = this.getFiles(type);
-    files.forEach(file => {
-      this._appendFolderFiles(file, type);
-    });
+    const files = this._getFiles(type);
+    for (let idx in files) {
+      if (files.hasOwnProperty(idx)) {
+        this._appendFolderFiles(files[idx], type);
+      }
+    }
     return Object.values(this[type]).reverse();
   }
 
   _compressImages = async () => new Promise((resolve) => {
     logger.info('Compressing images...');
-    if(!Object.keys(this[OUTPUT_TYPES.IMAGES]).length) this._getImageFolders(OUTPUT_TYPES.IMAGES);
+    if (!Object.keys(this[OUTPUT_TYPES.IMAGES]).length) this._getImageFolders(OUTPUT_TYPES.IMAGES);
     const key = Object.keys(this[OUTPUT_TYPES.IMAGES])[0];
     try {
       const output = fs.createWriteStream(IMAGES_ZIP_PATH);
-      const archive = archiver('zip', { zlib: { level: 9 } });
+      const archive = archiver('zip', {zlib: {level: 9}});
       archive.on('warning', logger.error);
       archive.on('error', logger.error);
       output.on('close', () => {
@@ -274,7 +301,7 @@ class Storage {
         fs.unlinkSync(IMAGES_ZIP_PATH);
       });
       this[OUTPUT_TYPES.IMAGES][key].files.forEach(item => {
-        archive.append(fs.readFileSync(this._resolvePath(OUTPUT_TYPES.IMAGES) + '/' + item), { name: item });
+        archive.append(fs.readFileSync(this._resolvePath(OUTPUT_TYPES.IMAGES) + '/' + item), {name: item});
       });
       archive.pipe(output);
       archive.finalize();
@@ -283,8 +310,64 @@ class Storage {
     }
   });
 
+  // hasOwnPropertyCheck is generally unneeded, but most IDEs wants it to be
   _syncWithS3() {
-    // wip
+    try {
+      logger.info('Started sync with S3...');
+      const start = performance.now();
+      for (let key in OUTPUT_TYPES) {
+        const type = OUTPUT_TYPES[key];
+        switch (type) {
+          case OUTPUT_TYPES.SCREENSHOTS:
+          case OUTPUT_TYPES.IMAGES: {
+            if(!Object.keys(this[type]).length) this._getImageFolders(type);
+            for(let folder in this[type]) {
+              if(this[type].hasOwnProperty(folder)) {
+                const files = this[type][folder]?.files;
+                for (let idx in files) {
+                  if(files.hasOwnProperty(idx) && !this.syncedFiles[type].includes(files[idx])) {
+                    const key = S3_PATH[type] + '/' + folder + '/' + files[idx];
+                    const buffer = fs.readFileSync(this._resolvePath(type) + '/' + files[idx]);
+                    this.syncedFiles[type].push(files[idx]);
+                    putObject(buffer, key);
+                  }
+                }
+              }
+            }
+            break;
+          }
+          case OUTPUT_TYPES.JSON: {
+            if(!Object.keys(this[type]).length) this._getJsonFolders();
+            for(let folder in this[type]) {
+              if(this[type].hasOwnProperty(folder) && this[type][folder]) {
+                const file = this[type][folder].file;
+                const key = S3_PATH[type] + '/' + dayjs(folder).format('YYYY-MM-DD') + '/' + file;
+                const buffer = fs.readFileSync(this._resolvePath(type) + '/' + file);
+                this.syncedFiles[type].push(file);
+                putObject(buffer, key);
+              }
+            }
+            break;
+          }
+          case OUTPUT_TYPES.LOG: {
+            for(let subType in OUTPUT_TYPES.LOG) {
+              if(OUTPUT_TYPES.LOG.hasOwnProperty(subType)) {
+                const path = this._resolvePath(OUTPUT_TYPES.LOG[subType]);
+                if(fs.existsSync(path)) {
+                  const key = S3_PATH[type] + '/' + `${subType}.log`;
+                  putObject(fs.readFileSync(path), key);
+                }
+              }
+            }
+            break;
+          }
+        }
+      }
+      const end = performance.now();
+      logger.info(`Sync ended in ${(end - start).toFixed(2)} ms`);
+    } catch (e) {
+      logger.error(e);
+    }
   }
 }
 

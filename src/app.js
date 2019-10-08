@@ -1,4 +1,4 @@
-import config from './config';
+import config, { setInstanceEnvs } from './config';
 import SendScreenshots from './tasks/SendScreenshots';
 import SendLogs from './tasks/SendLogs';
 import SendOutput from './tasks/SendOutput';
@@ -18,9 +18,10 @@ process.on('unhandledRejection', error => {
   logger.debug('%o', error);
 });
 
-const initApp = () => {
+const initApp = async () => {
   logger.info('Initializing socket server...');
   const socket = init();
+  await setInstanceEnvs();
   // dynamically initialize storage
   import('./services/storage');
 
@@ -28,14 +29,19 @@ const initApp = () => {
     const isValid = await valid(socket);
     if(isValid) {
       logger.info(`${socket.id} connected`);
-      new SendScreenshots(socket);
-      new SendLogs(socket);
-      new SendOutput(socket);
-      socket.on('disconnect', () => logger.info(`${socket.id} disconnected`));
+      const screenshotTask = new SendScreenshots(socket);
+      const logsTask = new SendLogs(socket);
+      const outputTask = new SendOutput(socket);
+      socket.on('disconnect', () => {
+        logger.info(`${socket.id} disconnected, watchers closed`);
+        screenshotTask.watcher?.close();
+        logsTask.watcher?.close();
+        outputTask.watcher?.close();
+      });
     }
   });
   socket.listen(config.app.port);
   logger.info(`Socket server is listening on port ${config.app.port}`);
 };
 
-initApp();
+initApp().catch(logger.error);
