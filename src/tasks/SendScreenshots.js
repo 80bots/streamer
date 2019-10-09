@@ -19,7 +19,7 @@ class SendScreenshots {
   listeners = ({
     [SendScreenshots.EVENTS.SCREENSHOTS]: (query) => this._sendScreenshotsFromFolder(query),
     [SendScreenshots.EVENTS.FOLDERS]: () => {
-      if(this.watcher) this.watcher.close();
+      if(this.watcher) storage._closeWatcher(OUTPUT_TYPES.SCREENSHOTS, this.watcher);
       this.watcher = storage._initWatcher(OUTPUT_TYPES.SCREENSHOTS, this._onScreenShotAdded);
       this._getFolders();
     },
@@ -32,6 +32,10 @@ class SendScreenshots {
         socket.on(event, this.listeners[event]);
       }
     }
+  }
+
+  closeWatcher() {
+    this.watcher && storage._closeWatcher(OUTPUT_TYPES.SCREENSHOTS, this.watcher);
   }
 
   _onScreenShotAdded = (image) => {

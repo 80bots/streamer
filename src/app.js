@@ -31,12 +31,11 @@ const initApp = async () => {
       logger.info(`${socket.id} connected`);
       const screenshotTask = new SendScreenshots(socket);
       const logsTask = new SendLogs(socket);
-      const outputTask = new SendOutput(socket);
+      new SendOutput(socket);
       socket.on('disconnect', () => {
         logger.info(`${socket.id} disconnected, watchers closed`);
-        screenshotTask.watcher?.close();
-        logsTask.watcher?.close();
-        outputTask.watcher?.close();
+        screenshotTask.closeWatcher();
+        logsTask.closeWatcher();
       });
     }
   });

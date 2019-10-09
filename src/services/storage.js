@@ -47,10 +47,10 @@ class Storage {
     setInterval(() => {
       this._syncWithS3();
     }, 300000);
-    setTimeout(() => {
-      this._syncWithS3();
-    }, 1000);
-
+    // update folder names every 1 hour
+    setInterval(() => {
+      this._updateFolderNames(OUTPUT_TYPES.SCREENSHOTS);
+    }, 3600000);
   }
 
   /**
@@ -122,7 +122,7 @@ class Storage {
   }
 
   getLog(type) {
-    let buff = new Buffer(0);
+    let buff = new Buffer.from(new ArrayBuffer(0));
     if (fs.existsSync(this._resolvePath(type))) {
       const logPath = this._resolvePath(type);
       buff = fs.readFileSync(logPath);
@@ -177,6 +177,12 @@ class Storage {
     }
     watcher && logger.info(`Watching ${type}`);
     return watcher;
+  }
+
+  _closeWatcher(type, watcher) {
+    watcher.unwatch(this._resolvePath(type));
+    watcher.close();
+    logger.info(`Unwatch ${type}`);
   }
 
   _onFileAdded = (filePath, type, sender) => {
@@ -367,6 +373,20 @@ class Storage {
       logger.info(`Sync ended in ${(end - start).toFixed(2)} ms`);
     } catch (e) {
       logger.error(e);
+    }
+  }
+
+  _updateFolderNames(type) {
+    const currentDate = dayjs();
+    if (this[type]) {
+      for (let folder in this[type]) {
+        if (this[type].hasOwnProperty(folder)) {
+          if (this[type][folder]?.name) {
+            const diff = currentDate.diff(folder, 'day');
+            this[type][folder].name = diff > 0 ? diff === 1 ? 'Yesterday' : `${diff} days ago` : 'Today';
+          }
+        }
+      }
     }
   }
 }

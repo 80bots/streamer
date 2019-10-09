@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import storage, { OUTPUT_TYPES } from '../services/storage';
+import {loggers} from 'winston';
 
 dayjs.extend(customParseFormat);
 
@@ -15,10 +16,10 @@ class SendLogs {
 
   listeners = ({
     [SendLogs.EVENTS.GET_LOGS]: (query = { init: false }) => {
-      const type = query.init ? OUTPUT_TYPES.LOG.INIT : OUTPUT_TYPES.LOG.WORK;
-      this._getLog(type);
-      if(this.watcher) this.watcher.close();
-      this.watcher = storage._initWatcher(type, this._onLog);
+      this.type = query.init ? OUTPUT_TYPES.LOG.INIT : OUTPUT_TYPES.LOG.WORK;
+      this._getLog(this.type);
+      if(this.watcher) storage._closeWatcher(this.type, this.watcher);
+      this.watcher = storage._initWatcher(this.type, this._onLog);
     }
   });
 
@@ -29,6 +30,10 @@ class SendLogs {
         socket.on(event, this.listeners[event]);
       }
     }
+  }
+
+  closeWatcher() {
+    this.watcher && storage._closeWatcher(this.type, this.watcher);
   }
 
   _onLog = (chunk) => {
