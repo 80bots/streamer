@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import storage, { OUTPUT_TYPES } from '../services/storage';
-import {loggers} from 'winston';
 
 dayjs.extend(customParseFormat);
 

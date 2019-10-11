@@ -100,12 +100,23 @@ class Storage {
   getOutputData({folder, type, limit, offset}) {
     if (this[type]?.[folder]) {
       switch (type) {
-        case OUTPUT_TYPES.JSON:
-          return JSON.parse(fs.readFileSync(this._resolvePath(type) + '/' + this[type][folder].file));
+        case OUTPUT_TYPES.JSON: {
+          let buff = [];
+          this._size(type, 0);
+          try {
+            buff = fs.readFileSync(this._resolvePath(type) + '/' + this[type][folder].file);
+            this._size(type, buff.length);
+            buff = JSON.parse(buff);
+          } catch (e) {
+            buff = buff.length ? buff : [];
+          }
+          return buff;
+        }
 
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES: {
           // first slice to avoid array mutation
+
           return this[type][folder].files
             .slice()
             .reverse()
@@ -126,7 +137,7 @@ class Storage {
     if (fs.existsSync(this._resolvePath(type))) {
       const logPath = this._resolvePath(type);
       buff = fs.readFileSync(logPath);
-      this.currentSize = buff.length;
+      this._size(type, buff.length);
     }
     return buff;
   }
@@ -156,7 +167,7 @@ class Storage {
     }
   }
 
-  _initWatcher(type, sender) {
+  _initWatcher(type, sender, folder) {
     const typePath = this._resolvePath(type);
     let watcher;
     switch (type) {
@@ -167,12 +178,20 @@ class Storage {
         break;
       }
 
-      case OUTPUT_TYPES.JSON:
       case OUTPUT_TYPES.LOG.WORK:
       case OUTPUT_TYPES.LOG.INIT: {
         watcher = watch(typePath, {persistent: true, usePolling: true, ignorePermissionErrors: true});
         watcher.on('change', (filePath, stats) => this._onFileChanged(filePath, stats, type, sender));
         break;
+      }
+
+      case OUTPUT_TYPES.JSON: {
+        const filePath = typePath + '/' + this[type][folder]?.file;
+        if(fs.existsSync(filePath)) {
+          watcher = watch(filePath, {persistent: true, usePolling: true, ignorePermissionErrors: true});
+          watcher.on('change', (watchPath, stats) => this._onFileChanged(watchPath, stats, type, sender));
+          break;
+        }
       }
     }
     watcher && logger.info(`Watching ${type}`);
@@ -200,11 +219,18 @@ class Storage {
 
   _onFileChanged = (filePath, stats, type, sender) => {
     const file = fs.openSync(filePath, 'r');
-    let length = stats.size - this.currentSize;
-    let buff = new Buffer.from(new ArrayBuffer(length));
-    fs.readSync(file, buff, 0, length, this.currentSize);
-    this.currentSize = stats.size;
-    sender(buff);
+    const size = this._size(type);
+    let length = stats.size - size - (type === OUTPUT_TYPES.JSON ? 1 : 0); //get rid of ']' at the JSON end
+    if(length > 0) {
+      let buff = new Buffer.from(new ArrayBuffer(length));
+      fs.readSync(file, buff, 0, length, size);
+      if(buff.toString() === '[' && type === OUTPUT_TYPES.JSON) {
+        this._size(type, size + 1); // skip '[' char and behave normally on next chunk
+      } else {
+        this._size(type, stats.size);
+        sender(buff, type);
+      }
+    }
   };
 
   _toImageFile = (type, fileName) => ({
@@ -251,6 +277,20 @@ class Storage {
   };
 
   _getDate = fileName => dayjs(fileName.split('.')[0], config.app.dateFormat).format('YYYY-MM-DD');
+
+  _size = (type, setTo) => {
+    switch (type) {
+      case OUTPUT_TYPES.LOG.WORK:
+      case OUTPUT_TYPES.LOG.INIT:
+        return typeof setTo === 'number' ? this.logSize = setTo : this.logSize;
+
+      case OUTPUT_TYPES.JSON:
+        return typeof setTo === 'number' ? this.jsonSize = setTo : this.jsonSize;
+
+      default:
+        return typeof setTo === 'number' ? this.currentSize = setTo : this.currentSize || 0;
+    }
+  };
 
   _initFolder = (file, type) => {
     const currentDate = dayjs();
