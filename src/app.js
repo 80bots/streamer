@@ -36,7 +36,7 @@ const initApp = async () => {
         logger.info(`${socket.id} disconnected, watchers closed`);
         screenshotTask.closeWatcher();
         logsTask.closeWatcher();
-        outputTask.closeWatcher();
+        outputTask.closeWatchers();
       });
     }
   });

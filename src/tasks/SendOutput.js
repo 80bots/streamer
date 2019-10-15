@@ -10,17 +10,19 @@ const logger = getLogger('output', AVAILABLE_COLORS.BLUE);
 class SendOutput {
   static EVENTS = {
     GET_FULL_OUTPUT: 'output.full',
-    GET_AVAILABLE: 'output.available',
-    GET_FOLDERS: 'output.folders',
-    GET_OUTPUT: 'output.data'
+    GET_AVAILABLE:   'output.available',
+    GET_FOLDERS:     'output.folders',
+    GET_OUTPUT:      'output.data'
   };
 
   static MESSAGES = {
-    AVAILABLE: 'output.available',
-    FOLDERS: 'output.folders',
-    OUTPUT: 'output.data',
-    APPEND: 'output.append',
-    FULL: 'output.full'
+    AVAILABLE:        'output.available',
+    APPEND_AVAILABLE: 'output.available.append',
+    APPEND_FOLDERS:   'output.folders.append',
+    FOLDERS:          'output.folders',
+    OUTPUT:           'output.data',
+    APPEND:           'output.append',
+    FULL:             'output.full',
   };
 
   listeners = ({
@@ -39,16 +41,19 @@ class SendOutput {
     }
   }
 
-  closeWatcher() {
+  closeWatchers() {
+    this.typeWatcher && storage._closeWatcher(OUTPUT_TYPES.GENERAL, this.typeWatcher);
     this.watcher && storage._closeWatcher(this.type, this.watcher);
   }
 
   _getAvailableOutputs() {
+    this.typeWatcher && storage._closeWatcher(OUTPUT_TYPES.GENERAL, this.typeWatcher);
+    this.typeWatcher = storage._initWatcher(OUTPUT_TYPES.GENERAL, this._onType, this._onFolder);
     this.socket.emit(SendOutput.MESSAGES.AVAILABLE, storage.getOutputFolders());
   }
 
   _getOutput({ folder, type, ...rest }) {
-    this.closeWatcher();
+    this.watcher && storage._closeWatcher(type, this.watcher);
     this.type = type;
     this.watcher = storage._initWatcher(type, this._onOutput, folder);
     this.socket.emit(SendOutput.MESSAGES.OUTPUT, storage.getOutputData({ folder, type, ...rest }));
@@ -59,6 +64,8 @@ class SendOutput {
   }
 
   _getFolders({ type }) {
+    this.folderWatcher && storage._closeWatcher(OUTPUT_TYPES.JSON, this.folderWatcher);
+    this.folderWatcher = storage._initWatcher(OUTPUT_TYPES.JSON);
     this.socket.emit(SendOutput.MESSAGES.FOLDERS, storage.getFolders(type));
   }
 
@@ -73,7 +80,15 @@ class SendOutput {
     } else {
       this.socket.emit(SendOutput.MESSAGES.APPEND, chunk);
     }
-  }
+  };
+
+  _onType = (type) => {
+    this.socket.emit(SendOutput.MESSAGES.APPEND_AVAILABLE, type);
+  };
+
+  _onFolder = (folder) => {
+    this.socket.emit(SendOutput.MESSAGES.APPEND_FOLDERS, folder);
+  };
 }
 
 export default SendOutput;

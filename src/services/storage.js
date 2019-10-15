@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import archiver from 'archiver';
 import { performance } from 'perf_hooks';
 import { putObject } from './s3';
-import { watch} from 'chokidar';
+import { watch } from 'chokidar';
 import { AVAILABLE_COLORS, getLogger } from './logger';
 
 const logger = getLogger('storage', AVAILABLE_COLORS.YELLOW);
@@ -18,6 +18,7 @@ export const OUTPUT_TYPES = {
   JSON: 'json',
   IMAGES: 'images',
   SCREENSHOTS: 'screenshots',
+  GENERAL: 'output'
 };
 
 const S3_PATH = {
@@ -92,9 +93,13 @@ class Storage {
    *
    */
   _getFiles(folder) {
-    return fs.readdirSync(this._resolvePath(folder), {withFileTypes: true})
-      .filter(item => !item.isDirectory())
-      .map(item => item.name);
+    if(fs.existsSync(this._resolvePath(folder))) {
+      return fs.readdirSync(this._resolvePath(folder), { withFileTypes: true })
+        .filter(item => !item.isDirectory())
+        .map(item => item.name);
+    } else {
+      return [];
+    }
   }
 
   getOutputData({folder, type, limit, offset}) {
@@ -190,8 +195,14 @@ class Storage {
         if(fs.existsSync(filePath)) {
           watcher = watch(filePath, {persistent: true, usePolling: true, ignorePermissionErrors: true});
           watcher.on('change', (watchPath, stats) => this._onFileChanged(watchPath, stats, type, sender));
-          break;
         }
+        break;
+      }
+
+      case OUTPUT_TYPES.GENERAL: {
+        watcher = watch(config.app.outputFolder, { ignoreInitial: true });
+        watcher.on('addDir', (watchPath) => this._onFolderCreated(watchPath, sender));
+        break;
       }
     }
     watcher && logger.info(`Watching ${type}`);
@@ -233,6 +244,17 @@ class Storage {
     }
   };
 
+  _onFolderCreated = (fullPath, sender) => {
+    try {
+      const folderName = fullPath.split('/')[fullPath.split('/').length - 1];
+      const type = Object.keys(OUTPUT_TYPES).find(key => OUTPUT_TYPES[key] === folderName);
+      sender(OUTPUT_TYPES[type]);
+      logger.info('New output available. Sending...');
+    } catch (e) {
+      logger.info('Added folder which is not expected output type');
+    }
+  };
+
   _toImageFile = (type, fileName) => ({
     name: fileName,
     data: fs.readFileSync(this._resolvePath(type) + '/' + fileName)
@@ -252,6 +274,9 @@ class Storage {
 
       case OUTPUT_TYPES.LOG.INIT:
         return path.resolve(config.app.initLogPath);
+
+      case OUTPUT_TYPES.GENERAL:
+        return config.app.outputFolder;
     }
   }
 
