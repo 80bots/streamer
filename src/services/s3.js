@@ -9,10 +9,16 @@ export const s3 = new S3({
   region:          config.s3.region,
 });
 
-export const putObject = (buffer, path) => new Promise((resolve, reject) => {
+export const putObject = (buffer, path, ContentType) => new Promise((resolve, reject) => {
   // prepend key
   const key = config.instance.name + '/' + path;
-  s3.putObject({ Body: buffer, Key: key, Bucket: config.s3.bucket }, (err, res) => {
+  const params = {
+    Body: buffer,
+    Key: key,
+    Bucket: config.s3.bucket,
+    ContentType
+  };
+  s3.putObject(params, (err, res) => {
     if(err) {
       reject(err);
     } else {
