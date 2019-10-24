@@ -11,10 +11,6 @@ class JsonHandler extends Listener {
     this._s3Root = config[STORAGE_TYPE_S3];
   }
 
-  get mime () {
-    return 'application/json';
-  }
-
   setCheckPoint (value) {
     this._checkPoint = +value;
   }
