@@ -1,4 +1,4 @@
-![80bots SaaS data streamer](public/images/80bots.svg)
+![80bots SaaS data streamer](misc/80bots.svg)
 
 # SaaS data streamer
 ## Overview:
