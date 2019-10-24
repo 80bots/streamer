@@ -45,9 +45,9 @@ class Storage {
       this._updateFolderThumbs(OUTPUT_TYPES.SCREENSHOTS);
     }, 100000);
     // sync with s3 every 5 minutes
-    setInterval(() => {
-      this._syncWithS3();
-    }, 300000);
+    // setInterval(() => {
+    //   this._syncWithS3();
+    // }, 300000);
     // update folder names every 1 hour
     setInterval(() => {
       this._updateFolderNames(OUTPUT_TYPES.SCREENSHOTS);
