@@ -28,10 +28,15 @@ or
 
 ### Env file configuration:
 `SOCKET_PORT` - configures the Socket.io server port
+
 `SCREENSHOTS_FOLDER` - Path to the folder where the VNC's screenshots are located. Default path is `${HOME}/.screenshots`
+
 `INIT_LOG_PATH` - Path to file of the Instance’s initial log file. The default path is `/var/log/cloud-init-output.log`
+
 `OUTPUT_FOLDER` - Path to the folder containing the result of the Puppeteer work. Default path is `${HOME}/puppeteer/output/`
-`LOG_PATH` - Path to Puppeteer’s log file. The default path is   `${HOME}/puppeteer/logs/log.log`
+
+`LOG_PATH` - Path to Puppeteer’s log file. The default path is `${HOME}/puppeteer/logs/log.log`
+
 `TIMESTAMP_FORMAT` - Date format string which is used for creating the Date object from screenshots name and preparing the folders structure emulation. Default: `YYYY-MM-DD-HH-mm-ss`
 
 ### TODOs:
