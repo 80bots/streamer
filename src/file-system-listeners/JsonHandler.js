@@ -4,6 +4,7 @@ import Listener from './Listener';
 import dayjs from 'dayjs';
 import { putObject } from '../services/s3';
 import {lookup as getMime} from 'mime-types';
+import Path from 'path';
 
 class JsonHandler extends Listener {
   constructor(config){
@@ -28,22 +29,30 @@ class JsonHandler extends Listener {
     const currentCheckPoint = this.getCheckPoint();
     const nextCheckPoint = 1 + currentCheckPoint;
     this.setCheckPoint(nextCheckPoint);
+    let key;
+    let buffer = fs.readFileSync(path);
+    let mime;
+    const baseFileName = Path.basename(path);
     try {
-      const rawJson = fs.readFileSync(path);
-      const items = JSON.parse(rawJson);
+      const items = JSON.parse(buffer);
+      if(!Array.isArray(items)) {
+        throw new Error('Invalid data array');
+      }
       const recentEntity = items[nextCheckPoint];
       if(recentEntity) {
-        const buffer = Buffer.from(JSON.stringify(recentEntity));
-        const fileName = `${nextCheckPoint}.json`;
-        const mime = getMime(fileName);
-        putObject(buffer, `${this.s3root}/${fileName}`, mime)
-          .then((res) => {
-            // NOTIFY MAIN SERVER
-          });
+        buffer = Buffer.from(JSON.stringify(recentEntity));
+        const fileName = `${nextCheckPoint}:${baseFileName}`;
+        key = `${this.s3root}/${fileName}`;
+        mime = getMime(fileName);
       }
     } catch (e) {
-      console.log(e);
+      key = `${this.s3root}/${baseFileName}`
+      mime = getMime(baseFileName);
     }
+    putObject(buffer, key, mime)
+      .then((res) => {
+        // NOTIFY MAIN SERVER
+      });
   }
 }
 
