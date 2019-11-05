@@ -25,7 +25,6 @@ class JsonHandler extends Listener {
   }
 
   onFileChanged(path) {
-    console.log('JSON');
     const currentCheckPoint = this.getCheckPoint();
     const nextCheckPoint = 1 + currentCheckPoint;
     this.setCheckPoint(nextCheckPoint);
@@ -51,7 +50,7 @@ class JsonHandler extends Listener {
     }
     putObject(buffer, key, mime)
       .then((res) => {
-        // NOTIFY MAIN SERVER
+        return this.tellServerAboutChanges(key);
       });
   }
 }

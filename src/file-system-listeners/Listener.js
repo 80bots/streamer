@@ -1,5 +1,7 @@
 import { watch } from 'chokidar';
-import Path from "path";
+import API from '../services/api';
+import Informant from '../services/informant';
+import config from '../config';
 
 class Listener {
   constructor (path, config) {
@@ -40,6 +42,16 @@ class Listener {
 
   onDirRemoved () {
 
+  }
+
+  async tellServerAboutChanges (key) {
+    const {
+      status
+    } = await API.post(`/instances/${config.instance.id}/objects`, { key });
+  }
+
+  async tellClientAboutChanges (data) {
+    Informant.send(data);
   }
 }
 

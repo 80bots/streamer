@@ -5,7 +5,6 @@ import runDataListeners from './tasks/DataListeners';
 import { getLogger } from './services/logger';
 import runSocketServer from './socket-server';
 const logger = getLogger('app');
-import Informant from './services/Informant';
 
 if(process.env?.NODE_ENV === 'production') {
   Sentry.init({ dsn: config.app.sentryDSN });
@@ -20,9 +19,6 @@ const initApp = async () => {
   // Initialize config using
   await setInstanceEnvs();
   runDataListeners();
-  // runSocketServer();
-  // dynamically initialize storage
-  import('./services/storage');
 };
 
 initApp().catch(logger.error);

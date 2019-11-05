@@ -13,7 +13,8 @@ const config = {
     initLogPath:       env.INIT_LOG_PATH || '/var/log/cloud-init-output.log',
     outputFolder:      env.OUTPUT_FOLDER || os.homedir() + '/puppeteer/output/',
     dateFormat:        env.TIMESTAMP_FORMAT || 'YYYY-MM-DD-HH-mm-ss',
-    sentryDSN:         env.SENTRY_DSN || 'https://f921491331824fc8818d4b72b0bba14f@sentry.io/1769350'
+    sentryDSN:         env.SENTRY_DSN || 'https://f921491331824fc8818d4b72b0bba14f@sentry.io/1769350',
+    socketServer:      env.SOCKET_SERVER_HOST || 'http://127.0.0.1:6001'
   },
   s3: {
     apiVersion: 'latest',

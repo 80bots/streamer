@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import readline from 'readline';
 import { putObject } from '../services/s3';
 import {lookup as getMime} from 'mime-types';
+import Path from "path";
 
 class JsonHandler extends Listener {
   constructor(params){
@@ -27,14 +28,14 @@ class JsonHandler extends Listener {
 
   storeToS3 (path) {
     clearTimeout(this.timer);
-    this.counter = 0;
-    // const buffer = fs.readFileSync(path);
-    // const fileName = 'work.log';
-    // const mime = getMime(fileName);
-    // putObject(buffer, `${this.s3root}/${fileName}`, mime)
-    //   .then((res) => {
-    //     // NOTIFY MAIN SERVER
-    //   });
+    const buffer = fs.readFileSync(path);
+    const fileName = Path.basename(path);
+    const mime = getMime(fileName);
+    const key = `${this.s3root}/${fileName}`
+    putObject(buffer, key, mime)
+      .then((res) => {
+        return this.tellServerAboutChanges(key);
+      });
   }
 
   onFileAdded(path) {

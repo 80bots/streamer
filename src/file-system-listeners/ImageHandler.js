@@ -22,9 +22,10 @@ class JsonHandler extends Listener {
       const fileName = Path.basename(path);
       const mime = getMime(fileName);
       const buffer = fs.readFileSync(path);
+      const key = `${this.s3root}/${fileName}`;
       putObject(buffer, `${this.s3root}/${fileName}`, mime)
         .then((res) => {
-          // NOTIFY MAIN SERVER
+          return this.tellServerAboutChanges(key);
         });
     }, 50);
   }
