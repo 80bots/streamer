@@ -9,15 +9,23 @@ export const s3 = new S3({
   region:          config.s3.region,
 });
 
+export const getFullPath = (key) => {
+  return config.instance.name + '/' + key;
+};
+
 export const putObject = (buffer, path, ContentType) => new Promise((resolve, reject) => {
   // prepend key
-  const key = config.instance.name + '/' + path;
+  const key = getFullPath(path);
   const params = {
-    Body: buffer,
     Key: key,
     Bucket: config.s3.bucket,
-    ContentType
   };
+  if(ContentType) {
+    params.ContentType = ContentType;
+  }
+  if(buffer.length) {
+    params.Body = buffer;
+  }
   s3.putObject(params, (err, res) => {
     if(err) {
       reject(err);
@@ -29,8 +37,8 @@ export const putObject = (buffer, path, ContentType) => new Promise((resolve, re
 
 export const getObject = key => new Promise((resolve, reject) => {
   // prepend key
-  const path = config.instance.name + '/' + key;
-  s3.getObject({ Key: path, Bucket: config.s3.bucket }, (err, data) => {
+  const key = getFullPath(key);
+  s3.getObject({ Key: key, Bucket: config.s3.bucket }, (err, data) => {
     if(err) {
       reject(err);
     } else {

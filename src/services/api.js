@@ -5,7 +5,7 @@ import { getLogger } from './logger';
 const logger = getLogger('streamer-api');
 
 const API = axios.create({
-  baseURL: process.env.API_URL || 'http://localhost::8000/api',
+  baseURL: process.env.API_URL || 'http://localhost::8000/tunnel',
   headers: {
     bot_instance_id: config.instance.id || 'test_id',
   }

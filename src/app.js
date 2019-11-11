@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import * as Sentry from '@sentry/node';
 import config, { setInstanceEnvs } from './config';
-import runDataListeners from './tasks/DataListeners';
+import runDataScrapper from './tasks/DataScrapper';
+import Storage from './storage';
 import { getLogger } from './services/logger';
-import runSocketServer from './socket-server';
 const logger = getLogger('app');
 
 if(process.env?.NODE_ENV === 'production') {
@@ -16,9 +16,9 @@ process.on('unhandledRejection', error => {
 });
 
 const initApp = async () => {
-  // Initialize config using
   await setInstanceEnvs();
-  runDataListeners();
+  await runDataScrapper();
+  new Storage();
 };
 
 initApp().catch(logger.error);

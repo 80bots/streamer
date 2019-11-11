@@ -2,15 +2,13 @@ import Echo from 'laravel-echo';
 import io from 'socket.io-client';
 import config from '../config';
 
-class Informant {
-  constructor() {
-    this.connect();
-  }
+const REQUEST_UPDATES = 'get.file.updates';
 
+class Informant {
   connect () {
-    this.informant = new Echo({
+    const socket = new Echo({
       broadcaster: 'socket.io',
-      host: config.app.socketServer.host,
+      host: config.app.socketServer,
       client: io,
       auth: {
         headers: {
@@ -18,13 +16,20 @@ class Informant {
         },
       },
     });
+    this.informant = socket.private(`instances.${config.instance.id}.storage`);
   }
 
-  send (folder, data) {
-    this.informant
-      .private(`instances.${config.instance.id}.storage`)
-      .whisper(folder, data);
+  emit (chat, data) {
+    console.log(chat);
+    this.informant.whisper(chat, data);
+  }
+
+  on (chat, callback) {
+    console.log(chat, callback);
+    this.informant.listenForWhisper(REQUEST_UPDATES, (e) => {
+      console.log(e);
+    });
   }
 }
 
-export default new Informant;
+export default new Informant();
