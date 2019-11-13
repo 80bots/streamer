@@ -2,7 +2,6 @@ import { watch } from 'chokidar';
 import appConfig from '../config';
 import fs from 'fs';
 import Path from 'path';
-import dayjs from 'dayjs';
 
 class Listener {
   constructor () {
@@ -22,8 +21,7 @@ class Listener {
 
   onFileAdded (path) {
     const fileName = Path.basename(path);
-    let folder = dayjs().format('YYYY-MM-DD');
-    const link = `${this.storageRoot}${folder}/logs/${fileName}`;
+    const link = `${this.storageRoot}logs/${fileName}`;
     if(!fs.existsSync(Path.dirname(link))) {
       fs.mkdirSync(Path.dirname(link), { recursive: true });
     }

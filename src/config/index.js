@@ -24,7 +24,8 @@ const config = {
     key:        'AKIAQOGPXKZ2F3RBT65W',
     secret:     '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',
     region:     'us-east-2',
-    bucket:     '80bots/streamer-data'
+    bucket:     '80bots/streamer-data',
+    cdnHost:    'd265x1r7kc6w9r.cloudfront.net'
   },
   instance: {
     name: '',

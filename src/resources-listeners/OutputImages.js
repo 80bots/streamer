@@ -2,7 +2,6 @@ import { watch } from 'chokidar';
 import appConfig from '../config';
 import fs from 'fs';
 import Path from 'path';
-import dayjs from 'dayjs';
 
 class Listener {
   constructor () {
@@ -21,11 +20,7 @@ class Listener {
   }
   onFileAdded (path) {
     const fileName = Path.basename(path);
-    let folder = dayjs(fileName.split('.')[0]).format('YYYY-MM-DD');
-    if(folder === 'Invalid Date') {
-      folder = dayjs().format('YYYY-MM-DD');
-    }
-    const link = `${this.storageRoot}${folder}/output/images/${fileName}`;
+    const link = `${this.storageRoot}output/images/${fileName}`;
     if(!fs.existsSync(Path.dirname(link))) {
       fs.mkdirSync(Path.dirname(link), { recursive: true });
     }

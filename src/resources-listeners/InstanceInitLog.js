@@ -22,8 +22,7 @@ class Listener {
 
   onFileAdded (path) {
     const fileName = Path.basename(path);
-    let folder = dayjs().format('YYYY-MM-DD');
-    const link = `${this.storageRoot}${folder}/logs/${fileName}`;
+    const link = `${this.storageRoot}logs/${fileName}`;
     if(!fs.existsSync(Path.dirname(link))) {
       fs.mkdirSync(Path.dirname(link), { recursive: true });
     }

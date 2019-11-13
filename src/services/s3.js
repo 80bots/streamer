@@ -35,6 +35,24 @@ export const putObject = (buffer, path, ContentType) => new Promise((resolve, re
   });
 });
 
+export const getSignedUrl = (path) => new Promise((resolve, reject) => {
+  const key = getFullPath(path);
+  s3.getSignedUrl('getObject', {
+    Bucket: config.s3.bucket,
+    Key: key,
+    Expires: 600
+  }, (err, url) => {
+    if(err) reject(err);
+    if(!config.s3.cdnHost) {
+      resolve(url);
+    } else {
+      const urlObj = new URL(url);
+      urlObj.hostname = config.s3.cdnHost;
+      resolve(urlObj.href);
+    }
+  });
+});
+
 export const getObject = key => new Promise((resolve, reject) => {
   // prepend key
   const key = getFullPath(key);

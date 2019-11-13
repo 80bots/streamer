@@ -2,8 +2,6 @@ import Echo from 'laravel-echo';
 import io from 'socket.io-client';
 import config from '../config';
 
-const REQUEST_UPDATES = 'get.file.updates';
-
 class Informant {
   connect () {
     const socket = new Echo({
@@ -20,15 +18,11 @@ class Informant {
   }
 
   emit (chat, data) {
-    console.log(chat);
+    // console.log('TELL', chat, data);
     this.informant.whisper(chat, data);
   }
-
   on (chat, callback) {
-    console.log(chat, callback);
-    this.informant.listenForWhisper(REQUEST_UPDATES, (e) => {
-      console.log(e);
-    });
+    this.informant.listenForWhisper(chat, callback);
   }
 }
 
