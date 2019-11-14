@@ -13,7 +13,8 @@ class Listener {
 
   applyListeners () {
     this.watcher
-      .on('add', (...params) => this.onFileAdded(...params));
+      .on('add', (...params) => this.onFileAdded(...params))
+      .on('change', (...params) => this.onFileAdded(...params));
   }
 
   onFileAdded (path) {

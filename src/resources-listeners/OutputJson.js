@@ -15,7 +15,7 @@ class Listener {
   applyListeners () {
     this.watcher
       .on('add', (...params) => this.onFileAdded(...params))
-      .on('addDir', path => log(`Directory ${path} has been added`));
+      .on('change', (...params) => this.onFileAdded(...params));
   }
   onFileAdded (path) {
     const fileName = Path.basename(path);
