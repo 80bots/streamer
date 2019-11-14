@@ -7,9 +7,6 @@ class Listener {
   constructor () {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.logPath;
-    if(!fs.existsSync(Path.dirname(this.root))) {
-      fs.mkdirSync(this.root, {recursive: true});
-    }
     this.watcher = watch(this.root, {persistent: true, ignoreInitial: false});
     this.applyListeners();
   }

@@ -4,13 +4,14 @@ import config from '../config';
 
 class Informant {
   connect () {
+    console.log(config.instance.id);
     const socket = new Echo({
       broadcaster: 'socket.io',
       host: config.app.socketServer,
       client: io,
       auth: {
         headers: {
-          bot_instance_id: config.instance.id,
+          ['bot-instance-id']: config.instance.id,
         },
       },
     });

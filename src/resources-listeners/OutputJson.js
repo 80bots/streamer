@@ -8,9 +8,6 @@ class Listener {
   constructor () {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.outputFolder + '/json';
-    if(!fs.existsSync(this.root)) {
-      fs.mkdirSync(this.root, {recursive: true});
-    }
     this.watcher = watch(this.root, {persistent: true, ignoreInitial: true});
     this.applyListeners();
   }
