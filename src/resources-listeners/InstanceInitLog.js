@@ -11,7 +11,7 @@ class Listener {
     if(!fs.existsSync(Path.dirname(this.root))) {
       fs.mkdirSync(this.root, {recursive: true});
     }
-    this.watcher = watch(this.root, {persistent: true, ignoreInitial: true});
+    this.watcher = watch(this.root, {persistent: true, ignoreInitial: false});
     this.applyListeners();
   }
 

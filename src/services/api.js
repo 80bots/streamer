@@ -8,7 +8,7 @@ const API = axios.create();
 
 API.interceptors.request.use(req => {
   req.url = process.env.API_URL + '/tunnel' + req.url;
-  req.headers.bot_instance_id = config.instance.id;
+  req.headers['bot-instance-id'] = config.instance.id;
   return req;
 });
 
