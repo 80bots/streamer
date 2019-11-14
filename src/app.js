@@ -17,8 +17,8 @@ process.on('unhandledRejection', error => {
 
 const initApp = async () => {
   await setInstanceEnvs();
-  await runDataScrapper();
   new Storage();
+  await runDataScrapper();
 };
 
 initApp().catch(logger.error);
