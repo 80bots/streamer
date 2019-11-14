@@ -14,10 +14,6 @@ class Index {
     this.watcher = watch(this.root, {persistent: true, ignoreInitial: true});
     this.applyListeners();
     this.schedulers = {};
-    Informant.on(REQUEST_UPDATES, (rules) => {
-      const {limit, offset, path} = rules;
-      console.log({limit, offset, path});
-    });
   }
 
   applyListeners () {

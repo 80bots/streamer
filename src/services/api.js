@@ -4,12 +4,14 @@ import { getLogger } from './logger';
 
 const logger = getLogger('streamer-api');
 
-const API = axios.create({
-  baseURL: process.env.API_URL || 'http://localhost::8000/tunnel',
-  headers: {
-    bot_instance_id: config.instance.id || 'test_id',
-  }
+const API = axios.create();
+
+API.interceptors.request.use(req => {
+  req.url = process.env.API_URL + '/tunnel' + req.url;
+  req.headers.bot_instance_id = config.instance.id;
+  return req;
 });
+
 
 API.interceptors.response.use(function (response) {
   // Any status code that lie within the range of 2xx cause this function to trigger
