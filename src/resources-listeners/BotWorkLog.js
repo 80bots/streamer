@@ -7,8 +7,16 @@ class Listener {
   constructor () {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.logPath;
-    this.watcher = watch(this.root, {persistent: true, ignoreInitial: false});
-    this.applyListeners();
+
+    const interval = setInterval(() => {
+      if(fs.existsSync(this.root)) {
+        this.watcher = watch(this.root, {persistent: true, ignoreInitial: false});
+        this.applyListeners();
+        clearInterval(interval);
+      } else {
+        console.log(`${this.root} doesn't exists`);
+      }
+    }, 1000);
   }
 
   applyListeners () {
@@ -18,6 +26,7 @@ class Listener {
   }
 
   onFileAdded (path) {
+    console.log(path);
     const fileName = Path.basename(path);
     const link = `${this.storageRoot}logs/${fileName}`;
     if(!fs.existsSync(Path.dirname(link))) {

@@ -8,8 +8,15 @@ class Listener {
   constructor () {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.screenshotsFolder;
-    this.watcher = watch(this.root, {persistent: true, ignoreInitial: true});
-    this.applyListeners();
+    const interval = setInterval(() => {
+      if(fs.existsSync(this.root)) {
+        this.watcher = watch(this.root, {persistent: true, ignoreInitial: true});
+        this.applyListeners();
+        clearInterval(interval);
+      } else {
+        console.log(`${this.root} doesn't exists`);
+      }
+    }, 1000);
   }
 
   applyListeners () {
