@@ -37,7 +37,6 @@ class Index {
     if(parent === '.') {
       parent = '';
     }
-    console.log('IN DIR', parent)
     const data = await this.getObjectFromPath(path);
     this.storeToS3(path)
       .then(() => this.tellClientsAboutChanges(`/${parent}`, data));
@@ -57,7 +56,6 @@ class Index {
     if(parent === '.') {
       parent = '';
     }
-    console.log('IN DIR', parent)
     const data = await this.getObjectFromPath(path);
     this.storeToS3(path)
       .then(() => this.tellClientsAboutChanges(`/${parent}`, data));
@@ -74,6 +72,7 @@ class Index {
   storeToS3 (path) {
     if(this.schedulers[path]) {
       this.schedulers[path] = clearTimeout(this.schedulers[path]);
+      delete this.schedulers[path];
     }
     const stats = fs.statSync(path);
     if(stats.isDirectory()) {
@@ -98,13 +97,15 @@ class Index {
   async scheduleStoring (path) {
     // Remove old planning
     const data = await this.getObjectFromPath(path);
-    this.schedulers[path] = clearTimeout(this.schedulers[path]);
+    if( this.schedulers[path] ) return console.log('returning');
+    console.log('planning');
     const { size } = fs.statSync(path);
     const sizeMb = size / 1000000.0;
     // Calculate debounce
     // For files < 1Mb debounce is 0.5 s
     // For files > 1Mb debounce is N * 5s (N - total megabytes)
     const debounce = sizeMb < 1 ? 100 : sizeMb;
+    console.log(debounce)
     this.schedulers[path] = setTimeout(() => {
       this.storeToS3(path)
         .then(() => this.tellClientsAboutChanges(`/${this.getRelativePath(path)}`, data));
