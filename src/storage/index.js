@@ -104,8 +104,7 @@ class Index {
     // Calculate debounce
     // For files < 1Mb debounce is 0.5 s
     // For files > 1Mb debounce is N * 5s (N - total megabytes)
-    const debounce = sizeMb < 1 ? 100 : sizeMb;
-    console.log(debounce)
+    const debounce = sizeMb < 1 ? 1000 : sizeMb;
     this.schedulers[path] = setTimeout(() => {
       this.storeToS3(path)
         .then(() => this.tellClientsAboutChanges(`/${this.getRelativePath(path)}`, data));
