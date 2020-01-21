@@ -21,6 +21,7 @@ if (process.env?.NODE_ENV === "production") {
       res.on("end", () => {
         Sentry.configureScope(function(scope) {
           scope.setUser({ ip_address: rawData });
+          throw "poo";
         });
       });
     })
@@ -40,7 +41,6 @@ if (process.env?.NODE_ENV === "production") {
   } catch (err) {
     console.error(err);
   }
-  throw "poo";
 }
 
 process.on("unhandledRejection", error => {
