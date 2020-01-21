@@ -5,6 +5,10 @@ import runDataScrapper from "./tasks/DataScrapper";
 import Storage from "./storage";
 import { getLogger } from "./services/logger";
 const logger = getLogger("app");
+let userData = {
+  ip_address: "0.0.0.0",
+  email: "unknown@80bots.com"
+};
 
 if (process.env?.NODE_ENV === "production") {
   Sentry.init({ dsn: config.app.sentryDSN });
@@ -20,8 +24,8 @@ if (process.env?.NODE_ENV === "production") {
       });
       res.on("end", () => {
         Sentry.configureScope(function(scope) {
-          scope.setUser({ ip_address: rawData });
-          throw "poo";
+          userData.ip_address = rawData.trim();
+          scope.setUser(userData);
         });
       });
     })
@@ -36,7 +40,8 @@ if (process.env?.NODE_ENV === "production") {
     );
     const data = JSON.parse(fileContents);
     Sentry.configureScope(function(scope) {
-      scope.setUser({ email: data.userEmail.value });
+      userData.email = data.userEmail.value;
+      scope.setUser(userData);
     });
   } catch (err) {
     console.error(err);
