@@ -1,5 +1,5 @@
-import { createLogger, format, transports } from 'winston';
-import { grey, green, cyan, blue, magenta, yellow, red } from 'colors';
+import { createLogger, format, transports } from "winston";
+import { grey, green, cyan, blue, magenta, yellow, red } from "colors";
 const { colorize, combine, timestamp, label, printf, splat } = format;
 
 export const AVAILABLE_COLORS = {
@@ -12,11 +12,18 @@ export const AVAILABLE_COLORS = {
   RED: red
 };
 
-const logFormat = color => printf(
-  info => `${grey(info.timestamp)} ${color(`[${info.label}|${info.level}]`)}: ${info.message}`
-);
+const logFormat = color =>
+  printf(
+    info =>
+      `${grey(info.timestamp)} ${color(`[${info.label}|${info.level}]`)}: ${
+        info.message
+      }`
+  );
 
-export const getLogger = (loggerLabel, loggerColor = AVAILABLE_COLORS.GREEN) => {
+export const getLogger = (
+  loggerLabel,
+  loggerColor = AVAILABLE_COLORS.GREEN
+) => {
   return createLogger({
     format: combine(
       colorize(),
@@ -25,7 +32,7 @@ export const getLogger = (loggerLabel, loggerColor = AVAILABLE_COLORS.GREEN) => 
       timestamp(),
       logFormat(loggerColor)
     ),
-    stderrLevels: ['error'],
+    stderrLevels: ["error"],
     transports: [new transports.Console()]
   });
 };

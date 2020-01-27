@@ -1,4 +1,4 @@
-import socketIo from 'socket.io';
+import socketIo from "socket.io";
 
 let ioInstance = null;
 
