@@ -6,7 +6,7 @@ import Path from "path";
 class Listener {
   constructor() {
     this.storageRoot = appConfig.local.root;
-    this.root = appConfig.app.outputFolder + "/json";
+    this.root = appConfig.app.outputFolder.replace(/\/$/, "") + "/json";
     const interval = setInterval(() => {
       if (fs.existsSync(this.root)) {
         this.watcher = watch(this.root, {
