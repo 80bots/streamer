@@ -24,11 +24,11 @@ const config = {
   },
   s3: {
     apiVersion: "latest",
-    key: "AKIAQOGPXKZ2F3RBT65W",
-    secret: "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",
-    region: "us-east-2",
-    bucket: "80bots/streamer-data",
-    cdnHost: "d265x1r7kc6w9r.cloudfront.net"
+    key: env.AWS_ACCESS_KEY_ID,
+    secret: env.AWS_SECRET_ACCESS_KEY,
+    region: env.AWS_REGION || "us-east-2",
+    bucket: env.AWS_BUCKET+"/streamer-data",
+    cdnHost: env.AWS_CLOUDFRONT_INSTANCES_HOST,
   },
   instance: {
     name: "",
