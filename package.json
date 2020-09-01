@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "node --experimental-worker dist/app.js",
     "dev": "nodemon --exec babel-node src/app.js",
     "build": "rm -rf dist/ && babel src --out-dir dist",
     "start": "NODE_ENV=production node dist/app.js"

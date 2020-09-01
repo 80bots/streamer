@@ -4,6 +4,10 @@ import config, { setInstanceEnvs } from "./config";
 import runDataScrapper from "./tasks/DataScrapper";
 import Storage from "./storage";
 import { getLogger } from "./services/logger";
+import Notification from "./services/notification";
+const WorkerPool = require("../src/worker");
+const os = require('os');
+
 const logger = getLogger("app");
 let userData = {
   ip_address: "0.0.0.0",
@@ -48,12 +52,24 @@ if (process.env?.NODE_ENV === "production") {
   }
 }
 
+// Start Worker
+
+const pool = new WorkerPool(os.cpus().length);
+const instanceId = config.instance.id;
+
+
+// Finish Worker
+
 process.on("unhandledRejection", error => {
   logger.error(error);
   logger.debug("%o", error);
 });
 
 const initApp = async () => {
+  await Notification.connect();
+  await pool.runTask('status', (err, result) => {
+    Notification.emit('notification', {notification: result, instanceId: instanceId});
+  });
   await setInstanceEnvs();
   new Storage();
   await runDataScrapper();
