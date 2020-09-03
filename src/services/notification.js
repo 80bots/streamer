@@ -18,12 +18,11 @@ class Notification {
   }
 
   emit(chat, status) {
-    console.log(chat, status);
-    this.notification.whisper(chat, status);
+    console.log(chat, {...status,  instanceId: config.instance.id});
+    this.notification.whisper(chat, {...status, instanceId: config.instance.id});
   }
   on(chat, callback) {
     this.notification.listenForWhisper(chat, callback);
   }
 }
-
 export default new Notification();

@@ -14,7 +14,6 @@ let userData = {
   email: "unknown@80bots.com"
 };
 const pool = new WorkerPool(os.cpus().length);
-const instanceId = config.instance.id;
 
 if (process.env?.NODE_ENV === "production") {
   Sentry.init({ dsn: config.app.sentryDSN });
@@ -60,13 +59,13 @@ process.on("unhandledRejection", error => {
 });
 
 const initApp = async () => {
-  await Notification.connect();
-  await pool.runTask('status', (err, result) => {
-    Notification.emit('notification', {notification: result, instanceId: instanceId});
-  });
   await setInstanceEnvs();
   new Storage();
   await runDataScrapper();
+  await Notification.connect();
+  await pool.runTask('status', (err, result) => {
+    Notification.emit('notification', {notification: result, error: err});
+  });
 };
 
 initApp().catch(logger.error);
