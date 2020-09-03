@@ -13,6 +13,8 @@ let userData = {
   ip_address: "0.0.0.0",
   email: "unknown@80bots.com"
 };
+const pool = new WorkerPool(os.cpus().length);
+const instanceId = config.instance.id;
 
 if (process.env?.NODE_ENV === "production") {
   Sentry.init({ dsn: config.app.sentryDSN });
@@ -51,14 +53,6 @@ if (process.env?.NODE_ENV === "production") {
     console.error(err);
   }
 }
-
-// Start Worker
-
-const pool = new WorkerPool(os.cpus().length);
-const instanceId = config.instance.id;
-
-
-// Finish Worker
 
 process.on("unhandledRejection", error => {
   logger.error(error);
