@@ -10,9 +10,9 @@ const config = {
     port: process.env.PORT || env.SOCKET_PORT || 6001,
     screenshotsFolder:
       env.SCREENSHOTS_FOLDER || os.homedir() + "/.screenshots/",
-    logPath: env.LOG_PATH || os.homedir() + "/puppeteer/logs/log.log",
+    logPath: env.LOG_PATH || os.homedir() + "/data-streamer/logs/log.log",
     initLogPath: env.INIT_LOG_PATH || "/var/log/cloud-init-output.log",
-    outputFolder: env.OUTPUT_FOLDER || os.homedir() + "/puppeteer/output/",
+    outputFolder: env.OUTPUT_FOLDER || os.homedir() + "/data-streamer/output/",
     dateFormat: env.TIMESTAMP_FORMAT || "YYYY-MM-DD-HH-mm-ss",
     sentryDSN:
       env.SENTRY_DSN ||

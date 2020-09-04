@@ -4,11 +4,16 @@ import config, { setInstanceEnvs } from "./config";
 import runDataScrapper from "./tasks/DataScrapper";
 import Storage from "./storage";
 import { getLogger } from "./services/logger";
+import Notification from "./services/notification";
+const WorkerPool = require("../src/worker");
+const os = require('os');
+
 const logger = getLogger("app");
 let userData = {
   ip_address: "0.0.0.0",
   email: "unknown@80bots.com"
 };
+const pool = new WorkerPool(os.cpus().length);
 
 if (process.env?.NODE_ENV === "production") {
   Sentry.init({ dsn: config.app.sentryDSN });
@@ -57,6 +62,10 @@ const initApp = async () => {
   await setInstanceEnvs();
   new Storage();
   await runDataScrapper();
+  await Notification.connect();
+  await pool.runTask('status', (err, result) => {
+    Notification.emit('notification', {notification: result, error: err});
+  });
 };
 
 initApp().catch(logger.error);
