@@ -129,7 +129,7 @@ class Index {
   }
 
   async tellClientsAboutChanges(path, data) {
-    console.log("TELL", path);
+    // console.log("TELL", path);
     Informant.emit(`${path}`, data);
   }
 

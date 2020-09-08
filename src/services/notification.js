@@ -18,7 +18,7 @@ class Notification {
   }
 
   emit(chat, status) {
-    console.log(chat, {...status,  instanceId: config.instance.id});
+    // console.log(chat, {...status,  instanceId: config.instance.id});
     this.notification.whisper(chat, {...status, instanceId: config.instance.id});
   }
   on(chat, callback) {
