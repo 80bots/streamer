@@ -17,7 +17,7 @@ class Listener {
         this.applyListeners();
         clearInterval(interval);
       } else {
-        console.log(`${this.root} doesn't exist`);
+        // console.log(`${this.root} doesn't exist`);
       }
     }, 1000);
   }
