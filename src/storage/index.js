@@ -97,8 +97,11 @@ class Index {
   async scheduleStoring(path) {
     // Remove old planning
     const data = await this.getObjectFromPath(path);
-    if (this.schedulers[path]) return console.log("returning");
-    console.log("planning");
+    if (this.schedulers[path]) {
+      // console.log("returning");
+      return;
+    }
+    // console.log("planning");
     const { size } = fs.statSync(path);
     const sizeMb = size / 1000000.0;
     // Calculate debounce
