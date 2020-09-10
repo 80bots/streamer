@@ -8,6 +8,7 @@ class Listener {
   constructor() {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.screenshotsFolder;
+    this.folder = dayjs().format("YYYY-MM-DD-hh-mm-ss");
     const interval = setInterval(() => {
       if (fs.existsSync(this.root)) {
         this.watcher = watch(this.root, {
@@ -29,9 +30,9 @@ class Listener {
   }
   onFileAdded(path) {
     const fileName = Path.basename(path);
-    let folder = dayjs(fileName.split(".")[0]).format("YYYY-MM-DD");
+    let folder = dayjs(fileName.split(".")[0]).format("YYYY-MM-DD-hh-mm-ss");
     if (folder === "Invalid Date") {
-      folder = dayjs().format("YYYY-MM-DD");
+      folder = this.folder;
     }
     const link = `${this.storageRoot}/screenshots/${folder}/${fileName}`;
     if (!fs.existsSync(Path.dirname(link))) {
