@@ -40,12 +40,12 @@ if (process.env?.NODE_ENV === "production") {
   const fs = require("fs");
   try {
     const fileContents = fs.readFileSync(
-      "../puppeteer/params/params.json",
+      "../src/params/params.json",
       "utf8"
     );
     const data = JSON.parse(fileContents);
     Sentry.configureScope(function(scope) {
-      userData.email = data.userEmail.value;
+      userData.email = data.userEmail ? data.userEmail.value : "unknown@80bots.com";
       scope.setUser(userData);
     });
   } catch (err) {
