@@ -38,11 +38,11 @@ class Listener {
       const screenshotColors = colors.map(color => color.hex());
 
       if( screenshotColors.length !== blackScreenshot.length ) {
-        this.onFileAdded(path, 'black_screen ' + fileName);
-      } else if (!blackScreenshot.every((item, index) => item === screenshotColors[index])) {
-        this.onFileAdded(path, 'black_screen ' + fileName);
-      } else {
         this.onFileAdded(path, fileName);
+      } else if (!blackScreenshot.every((item, index) => item === screenshotColors[index])) {
+        this.onFileAdded(path, fileName);
+      } else {
+        this.onFileAdded(path, 'black_screen ' + fileName);
       }
 
     }).catch(e=>e);
