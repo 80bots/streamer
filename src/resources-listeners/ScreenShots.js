@@ -9,7 +9,7 @@ class Listener {
   constructor() {
     this.storageRoot = appConfig.local.root;
     this.root = appConfig.app.screenshotsFolder;
-    this.folder = dayjs().format("YYYY-MM-DD-hh-mm-ss");
+    this.folder = dayjs().format("YYYY-MM-DD hh:mm:ss");
     const interval = setInterval(() => {
       if (fs.existsSync(this.root)) {
         this.watcher = watch(this.root, {
@@ -31,31 +31,27 @@ class Listener {
   }
 
   filterScreenshot(path) {
+
     const blackScreenshot = [ '#fcfcfc', '#040404', '#c0ff80', '#408480', '#400484' ];
     const fileName = Path.basename(path);
 
     getColors(path).then(colors => {
       const screenshotColors = colors.map(color => color.hex());
 
-      if( screenshotColors.length !== blackScreenshot.length ) {
-        this.onFileAdded(path, fileName);
+      if(screenshotColors.length !== blackScreenshot.length) {
+        this.onFileAdded(path, "screenshot " + fileName);
       } else if (!blackScreenshot.every((item, index) => item === screenshotColors[index])) {
-        this.onFileAdded(path, fileName);
+        this.onFileAdded(path, "screenshot " + fileName);
       } else {
-        this.onFileAdded(path, 'black_screen ' + fileName);
+        this.onFileAdded(path, "black_screenshot " + fileName);
       }
 
-    }).catch(e=>e);
+    }).catch(e => e);
   }
 
   onFileAdded(path, fileName) {
-    let folder = dayjs(fileName.split(".")[0]).format("YYYY-MM-DD-hh-mm-ss");
 
-    if (folder === "Invalid Date") {
-      folder = this.folder;
-    }
-
-    const link = `${this.storageRoot}/screenshots/${folder}/${fileName}`;
+    const link = `${this.storageRoot}/screenshots/${this.folder}/${fileName}`;
 
     if (!fs.existsSync(Path.dirname(link))) {
       fs.mkdirSync(Path.dirname(link), { recursive: true });
