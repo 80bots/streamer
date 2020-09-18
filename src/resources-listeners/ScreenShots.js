@@ -3,6 +3,7 @@ import appConfig from "../config";
 import fs from "fs";
 import Path from "path";
 import dayjs from "dayjs";
+import getColors from "get-image-colors";
 
 class Listener {
   constructor() {
@@ -25,23 +26,46 @@ class Listener {
 
   applyListeners() {
     this.watcher
-      .on("add", (...params) => this.onFileAdded(...params))
-      .on("change", (...params) => this.onFileAdded(...params));
+      .on("add", (...params) => this.filterScreenshot(...params))
+      .on("change", (...params) => this.filterScreenshot(...params));
   }
-  onFileAdded(path) {
+
+  filterScreenshot(path) {
+    const blackScreenshot = [ '#fcfcfc', '#040404', '#c0ff80', '#408480', '#400484' ];
     const fileName = Path.basename(path);
+
+    getColors(path).then(colors => {
+      const screenshotColors = colors.map(color => color.hex());
+
+      if( screenshotColors.length !== blackScreenshot.length ) {
+        this.onFileAdded(path, 'black_screen ' + fileName);
+      } else if (!blackScreenshot.every((item, index) => item === screenshotColors[index])) {
+        this.onFileAdded(path, 'black_screen ' + fileName);
+      } else {
+        this.onFileAdded(path, fileName);
+      }
+
+    }).catch(e=>e);
+  }
+
+  onFileAdded(path, fileName) {
     let folder = dayjs(fileName.split(".")[0]).format("YYYY-MM-DD-hh-mm-ss");
+
     if (folder === "Invalid Date") {
       folder = this.folder;
     }
+
     const link = `${this.storageRoot}/screenshots/${folder}/${fileName}`;
+
     if (!fs.existsSync(Path.dirname(link))) {
       fs.mkdirSync(Path.dirname(link), { recursive: true });
     }
+
     if (!fs.existsSync(link)) {
       fs.symlinkSync(path, link);
     }
   }
+
 }
 
 export default Listener;
