@@ -88,8 +88,12 @@ class Index {
               .compareTo(this.screenshotsFolder + files[files.length-2])
               .ignoreColors()
               .onComplete(function(data) {
-                this.tellServerAboutChanges(path, data.misMatchPercentage);
+                const imageDifference = data.misMatchPercentage;
+                console.log('key' + key);
+                console.log('imageDifference' + imageDifference);
+                this.tellServerAboutChanges(key, imageDifference);
               });
+          console.log('t' + t);
           return t;
         } catch (err) {console.log(err);}
         return true;
@@ -107,8 +111,12 @@ class Index {
             .compareTo(this.screenshotsFolder + files[files.length-2])
             .ignoreColors()
             .onComplete(function(data) {
-              this.tellServerAboutChanges(path, data.misMatchPercentage);
+              const imageDifference = data.misMatchPercentage;
+              console.log('key' + key);
+              console.log('imageDifference' + imageDifference);
+              this.tellServerAboutChanges(key, imageDifference);
             });
+        console.log('t' + t);
         return t;
       } catch (err) {console.log(err);}
       return true;
@@ -155,8 +163,12 @@ class Index {
                 .compareTo(this.screenshotsFolder + files[files.length-2])
                 .ignoreColors()
                 .onComplete(function(data) {
-                  this.tellServerAboutChanges(key, data.misMatchPercentage);
+                  const imageDifference = data.misMatchPercentage;
+                  console.log('key' + key);
+                  console.log('imageDifference' + imageDifference);
+                  this.tellServerAboutChanges(key, imageDifference);
                 });
+            console.log('t' + t);
             return t;
           } catch (err) {console.log(err);}
           return true;
