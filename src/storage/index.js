@@ -14,6 +14,7 @@ class Index {
     this.watcher = watch(this.root, { persistent: true, ignoreInitial: true });
     this.applyListeners();
     this.schedulers = {};
+    this.screenshotsFolder = appConfig.app.screenshotsFolder;
   }
 
   applyListeners() {
@@ -79,8 +80,18 @@ class Index {
     const stats = fs.statSync(path);
     if (stats.isDirectory()) {
       const key = this.getRelativePath(path);
-      return putObject(Buffer.alloc(0), key + "/").then(() => {
-        this.tellServerAboutChanges(path);
+      return putObject(Buffer.alloc(0), key + "/").then( async () => {
+        try {
+          let files = await readdir(this.screenshotsFolder);
+          let t = null;
+          resemble(this.screenshotsFolder + files[files.length-1])
+              .compareTo(this.screenshotsFolder + files[files.length-2])
+              .ignoreColors()
+              .onComplete(function(data) {
+                this.tellServerAboutChanges(path, data.misMatchPercentage);
+              });
+          return t;
+        } catch (err) {console.log(err);}
         return true;
       });
     }
@@ -88,8 +99,18 @@ class Index {
     const fileName = Path.basename(path);
     const mime = getMime(fileName);
     const key = this.getRelativePath(path);
-    return putObject(buffer, key, mime).then(() => {
-      this.tellServerAboutChanges(path);
+    return putObject(buffer, key, mime).then( async () => {
+      try {
+        let files = await readdir('./images');
+        let t = null;
+        resemble(this.screenshotsFolder + files[files.length-1])
+            .compareTo(this.screenshotsFolder + files[files.length-2])
+            .ignoreColors()
+            .onComplete(function(data) {
+              this.tellServerAboutChanges(path, data.misMatchPercentage);
+            });
+        return t;
+      } catch (err) {console.log(err);}
       return true;
     });
   }
@@ -126,7 +147,20 @@ class Index {
       })
       .catch(error => {
         // console.log(`Informing about "${key}" is postponed for 10 seconds due to ${error.response?.status} status error`);
-        setTimeout(() => this.tellServerAboutChanges(key), 10000);
+        setTimeout(async () => {
+          try {
+            let files = await readdir('./images');
+            let t = null;
+            resemble(this.screenshotsFolder + files[files.length-1])
+                .compareTo(this.screenshotsFolder + files[files.length-2])
+                .ignoreColors()
+                .onComplete(function(data) {
+                  this.tellServerAboutChanges(key, data.misMatchPercentage);
+                });
+            return t;
+          } catch (err) {console.log(err);}
+          return true;
+        }, 10000);
         throw error;
       });
   }
