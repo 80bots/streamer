@@ -92,8 +92,8 @@ class Index {
               .ignoreColors()
               .onComplete(function(data) {
                 const imageDifference = data.misMatchPercentage;
-                console.log('key' + key);
-                console.log('imageDifference' + imageDifference);
+                console.log('key_3 ' + key);
+                console.log('imageDifference_3 ' + imageDifference);
                 this.tellServerAboutChanges(key, imageDifference);
               });
           console.log('t' + t);
@@ -115,8 +115,8 @@ class Index {
             .ignoreColors()
             .onComplete(function(data) {
               const imageDifference = data.misMatchPercentage;
-              console.log('key' + key);
-              console.log('imageDifference' + imageDifference);
+              console.log('key_2 ' + key);
+              console.log('imageDifference_2 ' + imageDifference);
               this.tellServerAboutChanges(key, imageDifference);
             });
         console.log('t' + t);
@@ -151,6 +151,7 @@ class Index {
     const key = this.getRelativePath(path);
     return API.post(`/instances/${appConfig.instance.id}/objects`, { key, difference })
       .then(res => {
+        console.log(res);
         if (res.status === 201) {
           // console.log(`Informing about "${key}" has been successfully performed`);
         }
@@ -168,8 +169,8 @@ class Index {
                 .ignoreColors()
                 .onComplete(function(data) {
                   const imageDifference = data.misMatchPercentage;
-                  console.log('key' + key);
-                  console.log('imageDifference' + imageDifference);
+                  console.log('key_1 ' + key);
+                  console.log('imageDifference_1 ' + imageDifference);
                   this.tellServerAboutChanges(key, imageDifference);
                 });
             console.log('t' + t);
