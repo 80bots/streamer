@@ -157,6 +157,7 @@ class Index {
         return true;
       })
       .catch(error => {
+        console.log(error);
         // console.log(`Informing about "${key}" is postponed for 10 seconds due to ${error.response?.status} status error`);
         setTimeout(async () => {
           try {
