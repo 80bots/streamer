@@ -147,9 +147,9 @@ class Index {
     }, debounce);
   }
 
-  async tellServerAboutChanges(path) {
+  async tellServerAboutChanges(path, difference) {
     const key = this.getRelativePath(path);
-    return API.post(`/instances/${appConfig.instance.id}/objects`, { key })
+    return API.post(`/instances/${appConfig.instance.id}/objects`, { key, difference })
       .then(res => {
         if (res.status === 201) {
           // console.log(`Informing about "${key}" has been successfully performed`);
