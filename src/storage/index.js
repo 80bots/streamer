@@ -8,8 +8,6 @@ import { lookup as getMime } from "mime-types";
 import { putObject, getSignedUrl } from "../services/s3";
 import util from "util"
 
-const readdir = util.promisify(fs.readdir);
-
 class Index {
   constructor() {
     Informant.connect();
@@ -18,6 +16,7 @@ class Index {
     this.applyListeners();
     this.schedulers = {};
     this.screenshotsFolder = appConfig.app.screenshotsFolder;
+    this.readdir = util.promisify(fs.readdir);
   }
 
   applyListeners() {
@@ -85,7 +84,7 @@ class Index {
       const key = this.getRelativePath(path);
       return putObject(Buffer.alloc(0), key + "/").then( async () => {
         try {
-          let files = await readdir(this.screenshotsFolder);
+          let files = await this.readdir(this.screenshotsFolder);
           let t = null;
           resemble(this.screenshotsFolder + files[files.length-1])
               .compareTo(this.screenshotsFolder + files[files.length-2])
@@ -108,7 +107,7 @@ class Index {
     const key = this.getRelativePath(path);
     return putObject(buffer, key, mime).then( async () => {
       try {
-        let files = await readdir('./images');
+        let files = await this.readdir('./images');
         let t = null;
         resemble(this.screenshotsFolder + files[files.length-1])
             .compareTo(this.screenshotsFolder + files[files.length-2])
@@ -160,7 +159,7 @@ class Index {
         // console.log(`Informing about "${key}" is postponed for 10 seconds due to ${error.response?.status} status error`);
         setTimeout(async () => {
           try {
-            let files = await readdir('./images');
+            let files = await this.readdir('./images');
             let t = null;
             resemble(this.screenshotsFolder + files[files.length-1])
                 .compareTo(this.screenshotsFolder + files[files.length-2])
