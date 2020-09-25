@@ -100,7 +100,7 @@ class Index {
           return t;
         } catch (err) {console.log(err);}
         return true;
-      });
+      }).catch(error => console.log(error));
     }
     const buffer = fs.readFileSync(path);
     const fileName = Path.basename(path);
@@ -123,7 +123,7 @@ class Index {
         return t;
       } catch (err) {console.log(err);}
       return true;
-    });
+    }).catch(error => console.log(error));
   }
 
   async scheduleStoring(path) {
