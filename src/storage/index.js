@@ -6,6 +6,9 @@ import fs from "fs";
 import Path from "path";
 import { lookup as getMime } from "mime-types";
 import { putObject, getSignedUrl } from "../services/s3";
+import util from "util"
+
+const readdir = util.promisify(fs.readdir);
 
 class Index {
   constructor() {
