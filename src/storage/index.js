@@ -86,18 +86,15 @@ class Index {
       return putObject(Buffer.alloc(0), key + "/").then( async () => {
         try {
           let files = await this.readdir(this.screenshotsFolder);
-          let t = null;
           resemble(this.screenshotsFolder + files[files.length-1])
               .compareTo(this.screenshotsFolder + files[files.length-2])
               .ignoreColors()
-              .onComplete(function(data) {
+              .onComplete((data) => {
                 const imageDifference = data.misMatchPercentage;
                 console.log('key_3 ' + key);
                 console.log('imageDifference_3 ' + imageDifference);
                 this.tellServerAboutChanges(key, imageDifference);
               });
-          console.log('t' + t);
-          return t;
         } catch (err) {console.log(err);}
         return true;
       }).catch(error => console.log(error));
@@ -109,18 +106,15 @@ class Index {
     return putObject(buffer, key, mime).then( async () => {
       try {
         let files = await this.readdir(this.screenshotsFolder);
-        let t = null;
         resemble(this.screenshotsFolder + files[files.length-1])
             .compareTo(this.screenshotsFolder + files[files.length-2])
             .ignoreColors()
-            .onComplete(function(data) {
+            .onComplete((data) => {
               const imageDifference = data.misMatchPercentage;
               console.log('key_2 ' + key);
               console.log('imageDifference_2 ' + imageDifference);
               this.tellServerAboutChanges(key, imageDifference);
             });
-        console.log('t' + t);
-        return t;
       } catch (err) {console.log(err);}
       return true;
     }).catch(error => console.log(error));
@@ -163,18 +157,15 @@ class Index {
         setTimeout(async () => {
           try {
             let files = await this.readdir(this.screenshotsFolder);
-            let t = null;
             resemble(this.screenshotsFolder + files[files.length-1])
                 .compareTo(this.screenshotsFolder + files[files.length-2])
                 .ignoreColors()
-                .onComplete(function(data) {
+                .onComplete((data) => {
                   const imageDifference = data.misMatchPercentage;
                   console.log('key_1 ' + key);
                   console.log('imageDifference_1 ' + imageDifference);
                   this.tellServerAboutChanges(key, imageDifference);
                 });
-            console.log('t' + t);
-            return t;
           } catch (err) {console.log(err);}
           return true;
         }, 10000);
