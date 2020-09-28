@@ -105,16 +105,17 @@ class Index {
     const key = this.getRelativePath(path);
     return putObject(buffer, key, mime).then( async () => {
       try {
-        let files = await this.readdir(this.screenshotsFolder);
-        resemble(this.screenshotsFolder + files[files.length-1])
-            .compareTo(this.screenshotsFolder + files[files.length-2])
-            .ignoreColors()
-            .onComplete((data) => {
-              const imageDifference = data.misMatchPercentage;
-              console.log('key_2 ' + key);
-              console.log('imageDifference_2 ' + imageDifference);
-              this.tellServerAboutChanges(key, imageDifference);
-            });
+        // let files = await this.readdir(this.screenshotsFolder);
+        // resemble(this.screenshotsFolder + files[files.length-1])
+        //     .compareTo(this.screenshotsFolder + files[files.length-2])
+        //     .ignoreColors()
+        //     .onComplete((data) => {
+        //       const imageDifference = data.misMatchPercentage;
+        //       console.log('key_2 ' + key);
+        //       console.log('imageDifference_2 ' + imageDifference);
+              const imageDifference = 100;
+              await this.tellServerAboutChanges(key, imageDifference);
+            // });
       } catch (err) {console.log(err);}
       return true;
     }).catch(error => console.log(error));
