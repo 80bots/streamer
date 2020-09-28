@@ -141,7 +141,6 @@ class Index {
     const key = this.getRelativePath(path);
     return API.post(`/instances/${appConfig.instance.id}/objects`, { key, difference })
       .then(res => {
-        console.log(res);
         if (res.status === 201) {
           // console.log(`Informing about "${key}" has been successfully performed`);
         }
