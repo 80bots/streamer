@@ -90,7 +90,8 @@ class Index {
               .compareTo(this.screenshotsFolder + files[files.length-2])
               .ignoreColors()
               .onComplete((data) => {
-                const imageDifference = data.misMatchPercentage;
+                // const imageDifference = data.misMatchPercentage;
+                  const imageDifference = Math.floor(Math.random() * 101);
                 this.tellServerAboutChanges(key, imageDifference);
               });
         } catch (err) {console.log(err);}
@@ -108,7 +109,8 @@ class Index {
             .compareTo(this.screenshotsFolder + files[files.length-2])
             .ignoreColors()
             .onComplete((data) => {
-              const imageDifference = data.misMatchPercentage;
+              // const imageDifference = data.misMatchPercentage;
+                  const imageDifference = Math.floor(Math.random() * 101);
               this.tellServerAboutChanges(key, imageDifference);
             });
       } catch (err) {console.log(err);}
@@ -157,7 +159,7 @@ class Index {
                 .ignoreColors()
                 .onComplete((data) => {
                   // const imageDifference = data.misMatchPercentage;
-                  const imageDifference = Math.floor(Math.random() * 100);
+                  const imageDifference = Math.floor(Math.random() * 101);
                   this.tellServerAboutChanges(key, imageDifference);
                 });
           } catch (err) {console.log(err);}
