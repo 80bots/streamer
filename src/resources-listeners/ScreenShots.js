@@ -43,7 +43,7 @@ class Listener {
       } else if (!blackScreenshot.every((item, index) => item === screenshotColors[index])) {
         this.onFileAdded(path, "screenshot " + fileName);
       } else {
-        this.onFileAdded(path, "black_screenshot " + fileName);
+        this.onFileAdded(path, "blank_screenshot " + fileName);
       }
 
     }).catch(e => e);
