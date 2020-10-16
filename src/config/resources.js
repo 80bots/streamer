@@ -22,6 +22,14 @@ export const IMAGES = {
     env.PARAMS_FOLDER || os.homedir() + "/.streamer-params"
 };
 
+export const FILES = {
+  [STORAGE_TYPE_S3]: "files",
+  [STORAGE_TYPE_FS]:
+    (env.OUTPUT_FOLDER || os.homedir() + "/puppeteer/output") + "/files",
+  [STORAGE_PROCESSING_PARAMS]:
+    env.PARAMS_FOLDER || os.homedir() + "/.streamer-params"
+};
+
 export const SCREENSHOTS = {
   [STORAGE_TYPE_S3]: "screenshots",
   [STORAGE_TYPE_FS]: env.SCREENSHOTS_FOLDER || os.homedir() + "/.screenshots/",
@@ -54,6 +62,7 @@ export default {
   MAIN,
   JSON,
   IMAGES,
+  FILES,
   SCREENSHOTS,
   SERVER_LOGS,
   LOGS

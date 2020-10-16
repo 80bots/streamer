@@ -17,6 +17,7 @@ export const OUTPUT_TYPES = {
   },
   JSON: "json",
   IMAGES: "images",
+  FILES: "files",
   SCREENSHOTS: "screenshots",
   GENERAL: "output"
 };
@@ -25,11 +26,13 @@ const S3_PATH = {
   [OUTPUT_TYPES.LOG]: "logs",
   [OUTPUT_TYPES.JSON]: "json",
   [OUTPUT_TYPES.IMAGES]: "images",
+  [OUTPUT_TYPES.FILES]: "files",
   [OUTPUT_TYPES.SCREENSHOTS]: "screenshots",
   [OUTPUT_TYPES.LOG]: "logs"
 };
 
 const IMAGES_ZIP_PATH = "images.zip";
+const FILES_ZIP_PATH = "files.zip";
 
 class Storage {
   constructor() {
@@ -42,6 +45,7 @@ class Storage {
     // update thumbs every minute
     setInterval(() => {
       this._updateFolderThumbs(OUTPUT_TYPES.IMAGES);
+      this._updateFolderThumbs(OUTPUT_TYPES.FILES);
       this._updateFolderThumbs(OUTPUT_TYPES.SCREENSHOTS);
     }, 100000);
     // sync with s3 every 5 minutes
@@ -56,7 +60,7 @@ class Storage {
 
   /**
    *
-   * @param {('json'|'images'|'screenshots')} type Output folder name to read from
+   * @param {('json'|'images'|'files'|'screenshots')} type Output folder name to read from
    *
    */
   getFolders(type) {
@@ -69,6 +73,7 @@ class Storage {
 
         case OUTPUT_TYPES.SCREENSHOTS:
         case OUTPUT_TYPES.IMAGES:
+        case OUTPUT_TYPES.FILES:
           return this._getImageFolders(type);
       }
     } catch (e) {
@@ -91,7 +96,7 @@ class Storage {
 
   /**
    *
-   * @param {('json'|'images')} folder Output folder name to read from
+   * @param {('json'|'images'|'files')} folder Output folder name to read from
    *
    */
   _getFiles(folder) {
@@ -124,6 +129,7 @@ class Storage {
         }
 
         case OUTPUT_TYPES.SCREENSHOTS:
+        case OUTPUT_TYPES.FILES:
         case OUTPUT_TYPES.IMAGES: {
           // first slice to avoid array mutation
 
@@ -154,6 +160,7 @@ class Storage {
   async getFullOutput(type) {
     switch (type) {
       case OUTPUT_TYPES.JSON:
+      case OUTPUT_TYPES.FILES:
         if (!Object.keys(this[type]).length) this._getJsonFolders();
         return Object.values(this[type]).reduce((all, current) => {
           return all.concat(
@@ -187,6 +194,7 @@ class Storage {
     let watcher;
     switch (type) {
       case OUTPUT_TYPES.SCREENSHOTS:
+      case OUTPUT_TYPES.FILES:
       case OUTPUT_TYPES.IMAGES: {
         watcher = watch(typePath, { persistent: true, ignoreInitial: true });
         watcher.on("add", filePath =>
@@ -248,6 +256,7 @@ class Storage {
       this._appendFolderFiles(fileName, type);
       switch (type) {
         case OUTPUT_TYPES.SCREENSHOTS:
+        case OUTPUT_TYPES.FILES:
         case OUTPUT_TYPES.IMAGES:
           return sender(this._toImageFile(type, fileName));
       }
@@ -295,6 +304,7 @@ class Storage {
 
       case OUTPUT_TYPES.JSON:
       case OUTPUT_TYPES.IMAGES:
+      case OUTPUT_TYPES.FILES:
         return path.resolve(config.app.outputFolder, type);
 
       case OUTPUT_TYPES.LOG.WORK:
@@ -376,7 +386,8 @@ class Storage {
         break;
       }
 
-      case OUTPUT_TYPES.IMAGES: {
+      case OUTPUT_TYPES.IMAGES:
+      case OUTPUT_TYPES.FILES: {
         const date = currentDate.format("YYYY-MM-DD");
         this[type][date] = {
           thumbnail: fs.readFileSync(this._resolvePath(type) + "/" + file),
@@ -440,6 +451,7 @@ class Storage {
         const type = OUTPUT_TYPES[key];
         switch (type) {
           case OUTPUT_TYPES.SCREENSHOTS:
+          case OUTPUT_TYPES.FILES:
           case OUTPUT_TYPES.IMAGES: {
             if (!Object.keys(this[type]).length) this._getImageFolders(type);
             for (let folder in this[type]) {
