@@ -1,6 +1,6 @@
-![80bots SaaS data streamer](misc/80bots.svg)
+![80bots SaaS data streamer](misc/80bots-beam-animated-3x.gif)
 
-# SaaS data streamer
+# 80bots data streamer
 ## Overview:
 A data streamer app is a small tool which helps to transfer data from the File System (FS) to S3 (Cold Storage) and streams FS updates using Socket.io.
 
