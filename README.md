@@ -1,4 +1,4 @@
-![80bots SaaS data streamer](misc/80bots-beam-animated-3x.gif)
+![80bots data streamer](misc/80bots-beam-animated-3x.gif)
 
 # 80bots data streamer
 ## Overview:
