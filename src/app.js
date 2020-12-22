@@ -4,8 +4,8 @@ import config, { setInstanceEnvs } from "./config";
 import runDataScrapper from "./tasks/DataScrapper";
 import Storage from "./storage";
 import { getLogger } from "./services/logger";
-//import Notification from "./services/notification";
-import Notification from "./notifications";
+import ClientNotification from "./services/notification";
+import ServerNotification from "./notifications";
 const WorkerPool = require("../src/worker");
 const os = require('os');
 
@@ -63,11 +63,11 @@ const initApp = async () => {
   await setInstanceEnvs();
   new Storage();
   await runDataScrapper();
-  //await Notification.connect();
-  let notification = new Notification();
+  await ClientNotification.connect();
+  let serverNotification = new ServerNotification();
   await pool.runTask('status', (err, result) => {
-    //Notification.emit('notification', {notification: result, error: err});
-    notification.tellServerAboutNotificaition(result);
+    serverNotification.tellServerAboutNotificaition(result);
+    ClientNotification.emit('notification', {notification: result, error: err});
   });
 };
 
