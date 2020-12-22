@@ -1,7 +1,6 @@
 import API from "../services/api";
 import Informant from "../services/informant";
 import appConfig from "../config";
-import util from "util";
 class Index {
   constructor() {
     Informant.connect();
