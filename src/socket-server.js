@@ -1,6 +1,6 @@
 import { init } from "./services/socket.io";
 import valid from "./middlewares/auth";
-import SendScreenshots from "./tasks/SendScreenshots";
+//import SendScreenshots from "./tasks/SendScreenshots";
 import SendLogs from "./tasks/SendLogs";
 import SendOutput from "./tasks/SendOutput";
 import config from "./config";
