@@ -16,13 +16,13 @@ export default () => {
     const isValid = await valid(socket);
     if (isValid) {
       logger.info(`${socket.id} connected`);
-      //const screenshotTask = new SendScreenshots(socket);
+      const screenshotTask = new SendScreenshots(socket);
       const logsTask = new SendLogs(socket);
       const outputTask = new SendOutput(socket);
       socket.on("disconnect", () => {
         logger.info(`${socket.id} disconnected, watchers closed`);
         console.log(`${socket.id} disconnected, watchers closed`);
-        //screenshotTask.closeWatcher();
+        screenshotTask.closeWatcher();
         logsTask.closeWatcher();
         outputTask.closeWatchers();
       });
